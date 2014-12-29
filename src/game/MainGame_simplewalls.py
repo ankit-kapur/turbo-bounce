@@ -1,8 +1,5 @@
-__author__ = 'ankitkap'
-
 import pygame
 from pygame.locals import *
-import Utils
 
 # Boundary wall padding
 boundary_wall_padding = 20
@@ -103,22 +100,20 @@ class Main():
 
     def make_the_walls(self):
         distance_from_top = 120
-        self.make_horiz_wall(boundary_wall_padding, distance_from_top, 10, window_width - (boundary_wall_padding * 2))
-        self.make_horiz_wall(boundary_wall_padding, window_height - (boundary_wall_padding * 1.5), 10, window_width - (boundary_wall_padding * 2))
-        self.make_vertical_wall(boundary_wall_padding, distance_from_top, window_height - (boundary_wall_padding * 1.5) - distance_from_top, 10)
-        self.make_vertical_wall(window_width - (boundary_wall_padding * 2.5) + boundary_wall_padding, distance_from_top, window_height - (boundary_wall_padding * 1.5) - distance_from_top, 10)
+        boundary_wall1 = Wall(boundary_wall_padding, distance_from_top, 10, window_width - (boundary_wall_padding * 2), wall_color)
+        boundary_wall2 = Wall(boundary_wall_padding, window_height - (boundary_wall_padding * 1.5), 10, window_width - (boundary_wall_padding * 2), wall_color)
+        boundary_wall3 = Wall(boundary_wall_padding, distance_from_top, window_height - (boundary_wall_padding * 1.5) - distance_from_top, 10, wall_color)
+        boundary_wall4 = Wall(window_width - (boundary_wall_padding * 2.5) + boundary_wall_padding, distance_from_top, window_height - (boundary_wall_padding * 1.5) - distance_from_top, 10, wall_color)
 
-    def make_horiz_wall(self, x, y, height, width):
-        for x_coord in Utils.frange(x, x+width, 20.0):
-            wall = Wall(x_coord, y)
-            self.wall_list.add(wall)
-            self.all_sprite_list.add(wall)
+        self.wall_list.add(boundary_wall1)
+        self.wall_list.add(boundary_wall2)
+        self.wall_list.add(boundary_wall3)
+        self.wall_list.add(boundary_wall4)
+        self.all_sprite_list.add(boundary_wall1)
+        self.all_sprite_list.add(boundary_wall2)
+        self.all_sprite_list.add(boundary_wall3)
+        self.all_sprite_list.add(boundary_wall4)
 
-    def make_vertical_wall(self, x, y, height, width):
-        for y_coord in Utils.frange(y, y+height, 20.0):
-            wall = Wall(x, y_coord)
-            self.wall_list.add(wall)
-            self.all_sprite_list.add(wall)
 
     def showTextBanners(self):
         self.showText("TURBO BOUNCE", 28, pygame.Color('darkred'), None, 10, True)
@@ -207,7 +202,7 @@ class Ball(pygame.sprite.Sprite):
 
 
 class Wall(pygame.sprite.Sprite):
-    def __init__(self, x, y):
+    def __init__(self, x, y, height, width, obj_color):
         # Call the parent's constructor
         pygame.sprite.Sprite.__init__(self)
 
@@ -222,5 +217,15 @@ class Wall(pygame.sprite.Sprite):
 
         self.rect.x = x
         self.rect.y = y
+
+        # Make a blue wall, of the size specified in the parameters
+        # self.image = pygame.Surface([width, height])
+        # self.image.fill(obj_color)
+
+        # Make our top-left corner the passed-in location.
+        # self.rect = self.image.get_rect()
+        # self.rect.y = y
+        # self.rect.x = x
+
 
 Main()
