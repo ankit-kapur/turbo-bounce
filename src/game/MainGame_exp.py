@@ -153,7 +153,6 @@ class Main():
                 wall_y_coord = random.randint(distance_from_top + 50, play_area_size)
 
                 # Check if this wall is valid
-                # ---- break
                 is_invalid_wall = Utils.is_overlapping(wall_x_coord, wall_y_coord, wall_height, wall_length, interactables, gap_between_interactables)
 
                 # Make the wall
@@ -191,8 +190,8 @@ class Main():
         # Scores
         score_x_location = 670
         score_y_location = 15
-        self.show_text("Player 1: 0", 16, pygame.Color('orange'), score_x_location, score_y_location, False)
-        self.show_text("Player 2: 0", 16, pygame.Color('gray45'), score_x_location, score_y_location + 23, False)
+        self.show_text("Player 1: 0", 16, pygame.Color('darkblue'), score_x_location, score_y_location, False)
+        self.show_text("Player 2: 0", 16, pygame.Color('darkred'), score_x_location, score_y_location + 23, False)
 
     def show_text(self, text, font_size, font_color, x, y, is_centered):
         font = pygame.font.Font("../fonts/minecraft.ttf", font_size)
