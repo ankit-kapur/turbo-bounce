@@ -1,26 +1,42 @@
 __author__ = 'ankitkap'
 
+import random
 import pygame
 from pygame.locals import *
 import Utils
+from Interactable import Interactable
+
+# No. of walls, coins, and holes
+num_of_walls = 3
+num_of_coins = 8
+num_of_holes = 5
+
+# Range of wall lengths
+min_wall_length = 50
+max_wall_length = 100
+
+# Play area
+distance_from_top = 120
+play_area_size = 400
+
+# Range of play space
 
 # Boundary wall padding
 boundary_wall_padding = 20
 
 # Window dimensions
-window_height = 600
 window_width = 800
+window_height = 600
 
-x_max_velocity = 3
+x_max_velocity = 3.0
 y_max_velocity = 1.5
 
 # Rate by which a key press moves a ball
-x_acc_booster = 0.003
-y_acc_booster = 0.001
+x_acc_booster = 0.022
+y_acc_booster = 0.018
 
 # Colors
 wall_color = pygame.Color('darkred')
-text_color = pygame.Color('gray45')
 # Background color
 background_color = pygame.Color('white')
 
@@ -29,10 +45,19 @@ y_orientation = 1
 
 key_held = None
 
+# Metadata about all walls, coins and holes
+interactables = []
+gap_between_interactables = 30
+
 
 class Main():
 
     def __init__(self):
+
+        # Initialize stuff
+        global interactables
+        interactables = []
+
         pygame.init()
         global key_held
 
@@ -49,8 +74,8 @@ class Main():
         pygame.display.set_caption("Turbo bounce")
 
         # ---- Making the balls
-        ball1_initial_x = 5
-        ball1_initial_y = 5
+        ball1_initial_x = 50
+        ball1_initial_y = window_height - 100
         # Initial velocities
         initial_x_velocity = 0.2
         initial_y_velocity = 0.1
@@ -64,8 +89,6 @@ class Main():
         key_held = False
         while not done:
 
-            # msElapsed = clock.tick(30)
-
             self.surface.fill(background_color)
 
             self.all_sprite_list.update()
@@ -77,11 +100,15 @@ class Main():
             # box3.draw(self.surface)
 
             # ----- Text banners
-            self.showTextBanners()
+            self.show_text_banners(ball1)
 
+            # FPS
+            clock.tick(120)
+
+            # Go ahead and update the screen with what we've drawn.
             pygame.display.flip()
 
-            # To quit when the close button is clicked
+            # ----------- Event handlers ------------- #
             events = pygame.event.get()
             for e in events:
                 if e.type is KEYUP:
@@ -99,14 +126,43 @@ class Main():
                         key_held = "RIGHT"
 
                 if e.type is QUIT:
+                    # To quit when the close button is clicked
                     done = True
 
     def make_the_walls(self):
-        distance_from_top = 120
-        self.make_horiz_wall(boundary_wall_padding, distance_from_top, 10, window_width - (boundary_wall_padding * 2))
-        self.make_horiz_wall(boundary_wall_padding, window_height - (boundary_wall_padding * 1.5), 10, window_width - (boundary_wall_padding * 2))
-        self.make_vertical_wall(boundary_wall_padding, distance_from_top, window_height - (boundary_wall_padding * 1.5) - distance_from_top, 10)
+        global interactables
+
+        # --- Boundaries
+        # Format: x, y, height, width
+        self.make_horiz_wall(boundary_wall_padding/2, distance_from_top, 10, window_width - (boundary_wall_padding * 2))
+        self.make_horiz_wall(boundary_wall_padding/2, window_height - (boundary_wall_padding * 1.5), 10, window_width - (boundary_wall_padding))
+        self.make_vertical_wall(boundary_wall_padding/2, distance_from_top, window_height - (boundary_wall_padding * 1.5) - distance_from_top, 10)
         self.make_vertical_wall(window_width - (boundary_wall_padding * 2.5) + boundary_wall_padding, distance_from_top, window_height - (boundary_wall_padding * 1.5) - distance_from_top, 10)
+
+        # --- Random walls
+        for i in range(1, num_of_walls):
+            # While the wall generated is valid (not overlapping with anything else)
+            is_invalid_wall = True
+            while is_invalid_wall:
+                # Random length
+                wall_length = random.randint(min_wall_length, max_wall_length)
+                wall_height = 10
+
+                # Random x and y coords
+                wall_x_coord = random.randint(boundary_wall_padding + 50, window_width - (boundary_wall_padding * 2) - 30 - wall_length)
+                wall_y_coord = random.randint(distance_from_top + 50, play_area_size)
+
+                # Check if this wall is valid
+                # ---- break
+                is_invalid_wall = Utils.is_overlapping(wall_x_coord, wall_y_coord, wall_height, wall_length, interactables, gap_between_interactables)
+
+                # Make the wall
+                if not is_invalid_wall:
+                    self.make_horiz_wall(wall_x_coord, wall_y_coord, wall_height, wall_length)
+
+                    # Add wall data to list
+                    the_wall = Interactable(wall_x_coord, wall_y_coord, wall_height, wall_length)
+                    interactables.append(the_wall)
 
     def make_horiz_wall(self, x, y, height, width):
         for x_coord in Utils.frange(x, x+width, 20.0):
@@ -120,12 +176,25 @@ class Main():
             self.wall_list.add(wall)
             self.all_sprite_list.add(wall)
 
-    def showTextBanners(self):
-        self.showText("TURBO BOUNCE", 28, pygame.Color('darkred'), None, 10, True)
-        self.showText("Created by Ankit Kapur", 14, pygame.Color('gray36'), None, 50, True)
-        self.showText("Player 1: 0", 16, text_color, 600, 100, False)
+    def show_text_banners(self, ball):
+        self.show_text("TURBO BOUNCE", 28, pygame.Color('darkred'), None, 10, True)
+        self.show_text("Created by Ankit Kapur", 14, pygame.Color('gray36'), None, 50, True)
 
-    def showText(self, text, font_size, font_color, x, y, is_centered):
+        # Ball information
+        info_xpos = 610
+        info_ypos = 150
+        x_vel = "x-velocity: %.3f" % ball.x_velocity
+        y_vel = "y-velocity: %.3f" % ball.y_velocity
+        self.show_text(x_vel, 14, pygame.Color('gray45'), info_xpos, info_ypos, False)
+        self.show_text(y_vel, 14, pygame.Color('gray45'), info_xpos, info_ypos + 23, False)
+
+        # Scores
+        score_x_location = 670
+        score_y_location = 15
+        self.show_text("Player 1: 0", 16, pygame.Color('orange'), score_x_location, score_y_location, False)
+        self.show_text("Player 2: 0", 16, pygame.Color('gray45'), score_x_location, score_y_location + 23, False)
+
+    def show_text(self, text, font_size, font_color, x, y, is_centered):
         font = pygame.font.Font("../fonts/minecraft.ttf", font_size)
 
         # Render text
@@ -165,7 +234,7 @@ class Ball(pygame.sprite.Sprite):
         # ball_rect = ball.get_rect()
         # self.surface.blit(ball, [self.rect.x, self.rect.y])
 
-    def dealWithEvent(self):
+    def deal_with_event(self):
         global key_held
 
         # While the key is held
@@ -192,10 +261,10 @@ class Ball(pygame.sprite.Sprite):
         global x_orientation
         global y_orientation
 
-        self.dealWithEvent()
+        self.deal_with_event()
 
-        self.rect.x += self.x_velocity * x_orientation
-        self.rect.y += self.y_velocity * y_orientation
+        self.rect.x += round(self.x_velocity * x_orientation)
+        self.rect.y += round(self.y_velocity * y_orientation)
         if self.rect.x >= window_width:
             x_orientation = -1
         elif self.rect.x <= 0:
