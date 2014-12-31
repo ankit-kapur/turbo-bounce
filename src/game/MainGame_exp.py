@@ -1,3 +1,5 @@
+from nose.plugins import collect
+
 __author__ = 'ankitkap'
 
 import random
@@ -7,8 +9,8 @@ import Utils
 from Interactable import Interactable
 
 # No. of walls, coins, and holes
-num_of_walls = 3
-num_of_coins = 8
+num_of_walls = 7
+num_of_collectibles = 8
 num_of_holes = 5
 
 # Range of wall lengths
@@ -47,7 +49,7 @@ key_held = None
 
 # Metadata about all walls, coins and holes
 interactables = []
-gap_between_interactables = 30
+gap_between_interactables = 40
 
 
 class Main():
@@ -65,9 +67,10 @@ class Main():
 
         # List to hold all the sprites
         self.all_sprite_list = pygame.sprite.Group()
-
-        # Make the walls. (x_pos, y_pos, width, height)
+        # List of walls. (x_pos, y_pos, width, height)
         self.wall_list = pygame.sprite.Group()
+        # Collectibles
+        self.collectible_list = pygame.sprite.Group()
 
         screensize = (window_width, window_height)
         self.surface = pygame.display.set_mode(screensize)
@@ -81,6 +84,9 @@ class Main():
         initial_y_velocity = 0.1
         ball1 = Ball(ball1_initial_x, ball1_initial_y, initial_x_velocity, initial_y_velocity)
         self.all_sprite_list.add(ball1)
+
+        # ----- Making the collectibles
+        self.make_the_collectibles()
 
         # ----- Making the WALLS
         self.make_the_walls()
@@ -128,6 +134,36 @@ class Main():
                 if e.type is QUIT:
                     # To quit when the close button is clicked
                     done = True
+
+    def make_the_collectibles(self):
+            global interactables
+
+            # --- Random collectibles
+            for i in range(1, num_of_collectibles):
+                # While the wall generated is valid (not overlapping with anything else)
+                is_invalid_collectible = True
+                while is_invalid_collectible:
+                    # Random length
+                    wall_length = 20
+                    wall_height = 20
+
+                    # Random x and y coords
+                    wall_x_coord = random.randint(boundary_wall_padding + 50, window_width - (boundary_wall_padding * 2) - 30 - wall_length)
+                    wall_y_coord = random.randint(distance_from_top + 50, play_area_size)
+
+                    # Check if this wall is valid
+                    is_invalid_collectible = Utils.is_overlapping(wall_x_coord, wall_y_coord, wall_height, wall_length, interactables, gap_between_interactables)
+
+                    # Make the wall
+                    if not is_invalid_collectible:
+                        collectible = Collectible(wall_x_coord, wall_y_coord)
+                        self.collectible_list.add(collectible)
+                        self.all_sprite_list.add(collectible)
+                        # self.make_horiz_wall(wall_x_coord, wall_y_coord, wall_height, wall_length)
+
+                        # Add wall data to list
+                        the_collectible = Interactable(wall_x_coord, wall_y_coord, wall_height, wall_length)
+                        interactables.append(the_collectible)
 
     def make_the_walls(self):
         global interactables
@@ -281,6 +317,25 @@ class Wall(pygame.sprite.Sprite):
 
         # Load the image
         self.image = pygame.image.load("../images/wall1.png").convert()
+
+        # Set background color to be transparent
+        self.image.set_colorkey(background_color)
+
+        # Make our top-left corner the passed-in location.
+        self.rect = self.image.get_rect()
+
+        self.rect.x = x
+        self.rect.y = y
+
+
+class Collectible(pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        # Call the parent's constructor
+        pygame.sprite.Sprite.__init__(self)
+
+        # Load the image
+        self.image = pygame.image.load("../images/gold2.png").convert()
+        self.image = pygame.transform.scale(self.image, (25, 20))
 
         # Set background color to be transparent
         self.image.set_colorkey(background_color)

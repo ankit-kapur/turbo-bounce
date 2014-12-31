@@ -2,36 +2,42 @@ __author__ = 'ankitkap'
 
 
 def frange(x, y, jump):
-    while y < y:
+    x += 0.0
+    y += 0.0
+    jump += 0.0
+    while x < y:
         yield x
         x += jump
 
 
-def is_overlapping(xpos, ypos, height, width, interactables, gap):
+def do_rects_intersect(x1, y1, h1, w1, x2, y2, h2, w2):
+    return do_rects_intersect(x1, y1, h1, w1, x2, y2, h2, w2, 0)
+
+
+def do_rects_intersect(x1, y1, h1, w1, x2, y2, h2, w2, gap):
+    answer = False
+    if (x1 + w1 + gap < x2) or (x2 + w2 + gap < x1) or (y1 + h1 + gap < y2) or (y2 + h2 + gap < y1):
+        answer = False
+    else:
+        answer = True
+    return answer
+
+
+def is_overlapping(x, y, hei, wid, interactables, gap):
+    x1 = x
+    y1 = y
+    h1 = hei
+    w1 = wid
+
     answer = False
     for block in interactables:
-        # First check for x-overlapping
-        if (xpos + width + gap >= block.xpos) and (xpos + width + gap <= block.xpos + block.width):
-            answer = True
-        if (xpos - gap <= block.xpos + block.width) and (xpos - gap >= block.xpos):
-            answer = True
-        if (xpos <= block.xpos) and (xpos + width >= block.xpos + block.width):
-            answer = True
-        if (xpos >= block.xpos) and (xpos + width <= block.xpos + block.width):
-            answer = True
 
-        if answer:
-            # Now check y-overlapping
-            if (ypos + height + gap >= block.ypos) and (ypos + height + gap <= block.ypos + block.height):
-                answer = True
-            elif (ypos - gap <= block.ypos + block.height) and (ypos - gap >= block.ypos):
-                answer = True
-            elif (ypos <= block.ypos) and (ypos + height >= block.ypos + block.height):
-                answer = True
-            elif (ypos >= block.ypos) and (ypos + height <= block.ypos + block.height):
-                answer = True
-            else:
-                answer = False
+        x2 = block.xpos
+        y2 = block.ypos
+        h2 = block.height
+        w2 = block.width
+
+        answer = do_rects_intersect(x1, y1, h1, w1, x2, y2, h2, w2, gap)
 
         if answer:
             break
