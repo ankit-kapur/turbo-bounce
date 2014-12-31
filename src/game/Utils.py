@@ -1,6 +1,12 @@
 __author__ = 'ankitkap'
 
 
+def is_point_inside_rect(x, y, rect):
+    if (x > rect.left) and (x < rect.right) and (y > rect.top) and (y < rect.bottom):
+        return True
+    else:
+        return False
+
 def frange(x, y, jump):
     x += 0.0
     y += 0.0
