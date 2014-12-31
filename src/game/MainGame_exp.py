@@ -21,8 +21,6 @@ max_wall_length = 100
 distance_from_top = 120
 play_area_size = 400
 
-# Range of play space
-
 # Boundary wall padding
 boundary_wall_padding = 20
 
@@ -53,7 +51,6 @@ gap_between_interactables = 40
 
 
 class Main():
-
     def __init__(self):
 
         # Initialize stuff
@@ -82,8 +79,8 @@ class Main():
         # Initial velocities
         initial_x_velocity = 0.2
         initial_y_velocity = 0.1
-        ball1 = Ball(ball1_initial_x, ball1_initial_y, initial_x_velocity, initial_y_velocity)
-        self.all_sprite_list.add(ball1)
+        self.ball1 = Ball(ball1_initial_x, ball1_initial_y, initial_x_velocity, initial_y_velocity)
+        self.all_sprite_list.add(self.ball1)
 
         # ----- Making the collectibles
         self.make_the_collectibles()
@@ -98,15 +95,14 @@ class Main():
             self.surface.fill(background_color)
 
             self.all_sprite_list.update()
-            # box2.update(x_velocity, y_velocity)
-            # box3.update(x_velocity, y_velocity)
+
+            # Check for collisions
+            self.check_for_collisions()
 
             self.all_sprite_list.draw(self.surface)
-            # box2.draw(self.surface)
-            # box3.draw(self.surface)
 
             # ----- Text banners
-            self.show_text_banners(ball1)
+            self.show_text_banners()
 
             # FPS
             clock.tick(120)
@@ -135,45 +131,61 @@ class Main():
                     # To quit when the close button is clicked
                     done = True
 
+    def check_for_collisions(self):
+        # Any collectibles collected?
+        for collec in self.collectible_list:
+            if Utils.do_rects_intersect(self.ball1.rect.x, self.ball1.rect.y, self.ball1.rect.h, self.ball1.rect.w, collec.rect.x, collec.rect.y, collec.rect.h, collec.rect.w, 0):
+                # Increase the score
+                self.ball1.score += 1
+                # Delete the collectible
+                self.collectible_list.remove(collec)
+                self.all_sprite_list.remove(collec)
+
     def make_the_collectibles(self):
-            global interactables
+        global interactables
 
-            # --- Random collectibles
-            for i in range(1, num_of_collectibles):
-                # While the wall generated is valid (not overlapping with anything else)
-                is_invalid_collectible = True
-                while is_invalid_collectible:
-                    # Random length
-                    wall_length = 20
-                    wall_height = 20
+        # --- Random collectibles
+        for i in range(1, num_of_collectibles):
+            # While the wall generated is valid (not overlapping with anything else)
+            is_invalid_collectible = True
+            while is_invalid_collectible:
+                # Random length
+                wall_length = 20
+                wall_height = 20
 
-                    # Random x and y coords
-                    wall_x_coord = random.randint(boundary_wall_padding + 50, window_width - (boundary_wall_padding * 2) - 30 - wall_length)
-                    wall_y_coord = random.randint(distance_from_top + 50, play_area_size)
+                # Random x and y coords
+                wall_x_coord = random.randint(boundary_wall_padding + 50,
+                                              window_width - (boundary_wall_padding * 2) - 30 - wall_length)
+                wall_y_coord = random.randint(distance_from_top + 50, play_area_size)
 
-                    # Check if this wall is valid
-                    is_invalid_collectible = Utils.is_overlapping(wall_x_coord, wall_y_coord, wall_height, wall_length, interactables, gap_between_interactables)
+                # Check if this wall is valid
+                is_invalid_collectible = Utils.is_overlapping(wall_x_coord, wall_y_coord, wall_height, wall_length,
+                                                              interactables, gap_between_interactables)
 
-                    # Make the wall
-                    if not is_invalid_collectible:
-                        collectible = Collectible(wall_x_coord, wall_y_coord)
-                        self.collectible_list.add(collectible)
-                        self.all_sprite_list.add(collectible)
-                        # self.make_horiz_wall(wall_x_coord, wall_y_coord, wall_height, wall_length)
+                # Make the collectible
+                if not is_invalid_collectible:
+                    collectible = Collectible(wall_x_coord, wall_y_coord)
+                    self.collectible_list.add(collectible)
+                    self.all_sprite_list.add(collectible)
+                    # self.make_horiz_wall(wall_x_coord, wall_y_coord, wall_height, wall_length)
 
-                        # Add wall data to list
-                        the_collectible = Interactable(wall_x_coord, wall_y_coord, wall_height, wall_length)
-                        interactables.append(the_collectible)
+                    # Add wall data to list
+                    the_collectible = Interactable(wall_x_coord, wall_y_coord, wall_height, wall_length)
+                    interactables.append(the_collectible)
 
     def make_the_walls(self):
         global interactables
 
         # --- Boundaries
         # Format: x, y, height, width
-        self.make_horiz_wall(boundary_wall_padding/2, distance_from_top, 10, window_width - (boundary_wall_padding * 2))
-        self.make_horiz_wall(boundary_wall_padding/2, window_height - (boundary_wall_padding * 1.5), 10, window_width - (boundary_wall_padding))
-        self.make_vertical_wall(boundary_wall_padding/2, distance_from_top, window_height - (boundary_wall_padding * 1.5) - distance_from_top, 10)
-        self.make_vertical_wall(window_width - (boundary_wall_padding * 2.5) + boundary_wall_padding, distance_from_top, window_height - (boundary_wall_padding * 1.5) - distance_from_top, 10)
+        self.make_horiz_wall(boundary_wall_padding / 2, distance_from_top, 10,
+                             window_width - (boundary_wall_padding * 2))
+        self.make_horiz_wall(boundary_wall_padding / 2, window_height - (boundary_wall_padding * 1.5), 10,
+                             window_width - (boundary_wall_padding))
+        self.make_vertical_wall(boundary_wall_padding / 2, distance_from_top,
+                                window_height - (boundary_wall_padding * 1.5) - distance_from_top, 10)
+        self.make_vertical_wall(window_width - (boundary_wall_padding * 2.5) + boundary_wall_padding, distance_from_top,
+                                window_height - (boundary_wall_padding * 1.5) - distance_from_top, 10)
 
         # --- Random walls
         for i in range(1, num_of_walls):
@@ -185,11 +197,13 @@ class Main():
                 wall_height = 10
 
                 # Random x and y coords
-                wall_x_coord = random.randint(boundary_wall_padding + 50, window_width - (boundary_wall_padding * 2) - 30 - wall_length)
+                wall_x_coord = random.randint(boundary_wall_padding + 50,
+                                              window_width - (boundary_wall_padding * 2) - 30 - wall_length)
                 wall_y_coord = random.randint(distance_from_top + 50, play_area_size)
 
                 # Check if this wall is valid
-                is_invalid_wall = Utils.is_overlapping(wall_x_coord, wall_y_coord, wall_height, wall_length, interactables, gap_between_interactables)
+                is_invalid_wall = Utils.is_overlapping(wall_x_coord, wall_y_coord, wall_height, wall_length,
+                                                       interactables, gap_between_interactables)
 
                 # Make the wall
                 if not is_invalid_wall:
@@ -200,33 +214,33 @@ class Main():
                     interactables.append(the_wall)
 
     def make_horiz_wall(self, x, y, height, width):
-        for x_coord in Utils.frange(x, x+width, 20.0):
+        for x_coord in Utils.frange(x, x + width, 20.0):
             wall = Wall(x_coord, y)
             self.wall_list.add(wall)
             self.all_sprite_list.add(wall)
 
     def make_vertical_wall(self, x, y, height, width):
-        for y_coord in Utils.frange(y, y+height, 20.0):
+        for y_coord in Utils.frange(y, y + height, 20.0):
             wall = Wall(x, y_coord)
             self.wall_list.add(wall)
             self.all_sprite_list.add(wall)
 
-    def show_text_banners(self, ball):
+    def show_text_banners(self):
         self.show_text("TURBO BOUNCE", 28, pygame.Color('darkred'), None, 10, True)
         self.show_text("Created by Ankit Kapur", 14, pygame.Color('gray36'), None, 50, True)
 
         # Ball information
         info_xpos = 610
         info_ypos = 150
-        x_vel = "x-velocity: %.3f" % ball.x_velocity
-        y_vel = "y-velocity: %.3f" % ball.y_velocity
+        x_vel = "x-velocity: %.3f" % self.ball1.x_velocity
+        y_vel = "y-velocity: %.3f" % self.ball1.y_velocity
         self.show_text(x_vel, 14, pygame.Color('gray45'), info_xpos, info_ypos, False)
         self.show_text(y_vel, 14, pygame.Color('gray45'), info_xpos, info_ypos + 23, False)
 
         # Scores
         score_x_location = 670
         score_y_location = 15
-        self.show_text("Player 1: 0", 16, pygame.Color('darkblue'), score_x_location, score_y_location, False)
+        self.show_text("Player 1: %d" % self.ball1.score, 16, pygame.Color('darkblue'), score_x_location, score_y_location, False)
         self.show_text("Player 2: 0", 16, pygame.Color('darkred'), score_x_location, score_y_location + 23, False)
 
     def show_text(self, text, font_size, font_color, x, y, is_centered):
@@ -250,6 +264,9 @@ class Ball(pygame.sprite.Sprite):
     def __init__(self, x, y, initial_x_velocity, initial_y_velocity):
         # Call the parent class (Sprite) constructor
         pygame.sprite.Sprite.__init__(self)
+
+        # Score is initially zero
+        self.score = 0
 
         # Load the image
         self.image = pygame.image.load("../images/pokeball.png").convert()
