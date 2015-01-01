@@ -27,8 +27,8 @@ boundary_wall_padding = 20
 window_width = 800
 window_height = 600
 
-x_max_velocity = 3.0
-y_max_velocity = 4.5
+x_max_velocity = 5.0
+y_max_velocity = 5.0
 
 # Rate by which a key press moves a ball
 x_acc_booster = 0.022
@@ -325,11 +325,22 @@ class Ball(pygame.sprite.Sprite):
         # in the y-direction, force it to be zero
         if self.y_velocity < 0.000:
             # self.y_velocity = math.fabs(self.y_velocity)
-            self.y_orientation = -1
+            self.y_velocity = 0.000
+            # self.y_orientation = -1
         elif self.y_velocity > y_max_velocity:
             self.y_velocity = y_max_velocity
             # if x_velocity < 0.000:
             # x_velocity = 0.04
+
+        if self.x_velocity < 0.000:
+            self.x_velocity = 0.000
+            if "LEFT" in key_held:
+                self.x_orientation = -1
+            elif "RIGHT" in key_held:
+                self.x_orientation = 1
+
+        elif self.x_velocity > x_max_velocity:
+            self.x_velocity = x_max_velocity
 
     def update(self):
 
