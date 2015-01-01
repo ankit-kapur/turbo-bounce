@@ -35,7 +35,7 @@ x_acc_booster = 0.022
 y_acc_booster = 0.018
 
 # Colors
-wall_color = pygame.Color('darkred')
+wall_color = pygame.Color('darkblue')
 # Background color
 background_color = pygame.Color('black')
 
