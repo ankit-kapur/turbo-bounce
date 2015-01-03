@@ -28,14 +28,12 @@ window_width = 800
 window_height = 600
 
 x_max_velocity = 5.0
-y_max_velocity = 5.0
+y_max_velocity = 7.0
 
-# Rate by which a key press moves a ball
+# Rate by which a key press moves a player
 x_acc_booster = 0.022
 y_acc_booster = 0.018
 
-# Colors
-wall_color = pygame.Color('darkblue')
 # Background color
 background_color = pygame.Color('black')
 
@@ -44,12 +42,6 @@ gap_between_interactables = 40
 
 key_held = None
 interactables = []
-
-TOP = 1
-BOTTOM = 2
-LEFT = 3
-RIGHT = 4
-
 
 class Main():
     def __init__(self):
@@ -77,14 +69,14 @@ class Main():
         # ----- Making the WALLS
         self.make_the_walls()
 
-        # ---- Making the balls
-        ball1_initial_x = 50
-        ball1_initial_y = window_height - 100
+        # ---- Making the players
+        player1_initial_x = 50
+        player1_initial_y = window_height - 100
         # Initial velocities
         initial_x_velocity = 0.2
         initial_y_velocity = 0.1
-        self.ball1 = Ball(ball1_initial_x, ball1_initial_y, initial_x_velocity, initial_y_velocity, self.wall_list)
-        self.all_sprite_list.add(self.ball1)
+        self.player1 = Player(player1_initial_x, player1_initial_y, initial_x_velocity, initial_y_velocity, self.wall_list)
+        self.all_sprite_list.add(self.player1)
 
         # ----- Making the collectibles
         self.make_the_collectibles()
@@ -228,13 +220,13 @@ class Main():
         self.show_text("TURBO BOUNCE", 28, pygame.Color('darkred'), None, 10, True)
         self.show_text("Created by Ankit Kapur", 14, pygame.Color('gray36'), None, 50, True)
 
-        # Ball information
+        # Player information
         info_xpos = 620
         info_ypos = 150
-        x_vel = "x-veloc: %.3f" % self.ball1.x_velocity
-        x_ori = "x-orien: %.3f" % self.ball1.x_orientation
-        y_vel = "y-veloc: %.3f" % self.ball1.y_velocity
-        y_ori = "y-orien: %.3f" % self.ball1.y_orientation
+        x_vel = "x-veloc: %.3f" % self.player1.x_velocity
+        x_ori = "x-orien: %.3f" % self.player1.x_orientation
+        y_vel = "y-veloc: %.3f" % self.player1.y_velocity
+        y_ori = "y-orien: %.3f" % self.player1.y_orientation
 
         self.show_text(x_vel, 14, pygame.Color('gray45'), info_xpos, info_ypos, False)
         self.show_text(x_ori, 14, pygame.Color('gray45'), info_xpos, info_ypos + 23, False)
@@ -244,7 +236,7 @@ class Main():
         # Scores
         score_x_location = 670
         score_y_location = 15
-        self.show_text("Player 1: %d" % self.ball1.score, 16, pygame.Color('darkblue'), score_x_location, score_y_location, False)
+        self.show_text("Player 1: %d" % self.player1.score, 16, pygame.Color('orange'), score_x_location, score_y_location, False)
         self.show_text("Player 2: 0", 16, pygame.Color('darkred'), score_x_location, score_y_location + 23, False)
 
     def show_text(self, text, font_size, font_color, x, y, is_centered):
@@ -267,15 +259,15 @@ class Main():
 
         # Any collectibles collected?
         for collec in self.collectible_list:
-            if Utils.do_rects_intersect(self.ball1.rect.x, self.ball1.rect.y, self.ball1.rect.h, self.ball1.rect.w, collec.rect.x, collec.rect.y, collec.rect.h, collec.rect.w):
+            if Utils.do_rects_intersect(self.player1.rect.x, self.player1.rect.y, self.player1.rect.h, self.player1.rect.w, collec.rect.x, collec.rect.y, collec.rect.h, collec.rect.w):
                 # Increase the score
-                self.ball1.score += 1
+                self.player1.score += 1
                 # Delete the collectible
                 self.collectible_list.remove(collec)
                 self.all_sprite_list.remove(collec)
 
 
-class Ball(pygame.sprite.Sprite):
+class Player(pygame.sprite.Sprite):
     def __init__(self, x, y, initial_x_velocity, initial_y_velocity, wall_list):
         # Call the parent class (Sprite) constructor
         pygame.sprite.Sprite.__init__(self)
@@ -301,12 +293,6 @@ class Ball(pygame.sprite.Sprite):
 
         self.wall_list = wall_list
 
-        # def draw(self, self.surface):
-
-        # ball = pygame.image.load("../images/black_ball.png")
-        # ball_rect = ball.get_rect()
-        # self.surface.blit(ball, [self.rect.x, self.rect.y])
-
     def deal_with_event(self):
         global key_held
 
@@ -317,9 +303,15 @@ class Ball(pygame.sprite.Sprite):
             if "DOWN" in key_held:
                 self.y_velocity -= y_acc_booster
             if "LEFT" in key_held:
-                self.x_velocity -= x_acc_booster
+                if self.x_orientation == 1:
+                    self.x_velocity -= x_acc_booster
+                else:
+                    self.x_velocity += x_acc_booster
             if "RIGHT" in key_held:
-                self.x_velocity += x_acc_booster
+                if self.x_orientation == -1:
+                    self.x_velocity -= x_acc_booster
+                else:
+                    self.x_velocity += x_acc_booster
 
         # Instead of letting acceleration go negative
         # in the y-direction, force it to be zero
