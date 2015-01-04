@@ -27,12 +27,20 @@ boundary_wall_padding = 20
 window_width = 800
 window_height = 600
 
+# Player 1
+player1_main_color = 'gold'
+player1_color = 'gold4'
+
+player2_main_color = 'gray62'
+player2_color = 'gray28'
+
+
 x_max_velocity = 5.0
 y_max_velocity = 7.0
 
 # Rate by which a key press moves a player
-x_acc_booster = 0.022
-y_acc_booster = 0.018
+x_acc_booster = 0.042
+y_acc_booster = 0.038
 
 # Background color
 background_color = pygame.Color('black')
@@ -81,12 +89,13 @@ class Main():
         # ----- Making the collectibles
         self.make_the_collectibles()
 
-
         quit_game = False
         key_held = []
         while not quit_game:
 
             self.surface.fill(background_color)
+            # background_image = pygame.image.load("../images/background1.png").convert()
+            # self.surface.blit(background_image, [0, 0])
 
             self.all_sprite_list.update()
 
@@ -99,7 +108,7 @@ class Main():
             self.show_text_banners()
 
             # FPS
-            clock.tick(170)
+            clock.tick(250)
 
             # Go ahead and update the screen with what we've drawn.
             pygame.display.flip()
@@ -166,17 +175,18 @@ class Main():
 
     def make_the_walls(self):
         global interactables
+        gap_from_bottom = 25
 
         # --- Boundaries
         # Format: x, y, height, width
         self.make_horiz_wall(boundary_wall_padding / 2, distance_from_top, 10,
                              window_width - (boundary_wall_padding * 2))
-        self.make_horiz_wall(boundary_wall_padding / 2, window_height - (boundary_wall_padding * 1.5), 10,
+        self.make_horiz_wall(boundary_wall_padding / 2, window_height - (boundary_wall_padding * 1.5) - gap_from_bottom, 10,
                              window_width - (boundary_wall_padding))
         self.make_vertical_wall(boundary_wall_padding / 2, distance_from_top,
-                                window_height - (boundary_wall_padding * 1.5) - distance_from_top, 10)
+                                window_height - (boundary_wall_padding * 1.5) - distance_from_top - gap_from_bottom, 10)
         self.make_vertical_wall(window_width - (boundary_wall_padding * 2.5) + boundary_wall_padding, distance_from_top,
-                                window_height - (boundary_wall_padding * 1.5) - distance_from_top, 10)
+                                window_height - (boundary_wall_padding * 1.5) - distance_from_top - gap_from_bottom, 10)
 
         # --- Random walls
         for i in range(1, num_of_walls):
@@ -217,8 +227,8 @@ class Main():
             self.all_sprite_list.add(wall)
 
     def show_text_banners(self):
-        self.show_text("TURBO BOUNCE", 28, pygame.Color('darkred'), None, 10, True)
-        self.show_text("Created by Ankit Kapur", 14, pygame.Color('gray36'), None, 50, True)
+        self.show_text("TURBO BOUNCE", 28, pygame.Color('dodgerblue2'), None, 10, True)
+        self.show_text("Created by Ankit Kapur", 14, pygame.Color('dodgerblue4'), None, 50, True)
 
         # Player information
         info_xpos = 620
@@ -228,16 +238,31 @@ class Main():
         y_vel = "y-veloc: %.3f" % self.player1.y_velocity
         y_ori = "y-orien: %.3f" % self.player1.y_orientation
 
-        self.show_text(x_vel, 14, pygame.Color('gray45'), info_xpos, info_ypos, False)
-        self.show_text(x_ori, 14, pygame.Color('gray45'), info_xpos, info_ypos + 23, False)
-        self.show_text(y_vel, 14, pygame.Color('gray45'), info_xpos, info_ypos + 23 + 33, False)
-        self.show_text(y_ori, 14, pygame.Color('gray45'), info_xpos, info_ypos + 23 + 33 + 23, False)
+        self.show_text(x_vel, 13, pygame.Color('gray45'), info_xpos, info_ypos, False)
+        self.show_text(x_ori, 13, pygame.Color('gray45'), info_xpos, info_ypos + 23, False)
+        self.show_text(y_vel, 13, pygame.Color('gray45'), info_xpos, info_ypos + 23 + 33, False)
+        self.show_text(y_ori, 13, pygame.Color('gray45'), info_xpos, info_ypos + 23 + 33 + 23, False)
 
-        # Scores
-        score_x_location = 670
+        score_x_offset = 8
+
+        # Player 1 information
+        score_x_location = 50
         score_y_location = 15
-        self.show_text("Player 1: %d" % self.player1.score, 16, pygame.Color('orange'), score_x_location, score_y_location, False)
-        self.show_text("Player 2: 0", 16, pygame.Color('darkred'), score_x_location, score_y_location + 23, False)
+        self.show_text("PLAYER 1", 18, pygame.Color(player1_main_color), score_x_location, score_y_location, False)
+        self.show_text("Score: %d" % self.player1.score, 16, pygame.Color(player1_color), score_x_location + score_x_offset, score_y_location + 28, False)
+        self.show_text("Lives: x x x", 16, pygame.Color(player1_color), score_x_location-1, score_y_location + 28 + 28, False)
+
+        # Player 2 information
+        score_x_location = 660
+        score_y_location = 15
+        self.show_text("PLAYER 2", 18, pygame.Color(player2_main_color), score_x_location, score_y_location, False)
+        self.show_text("Score: %d" % self.player1.score, 16, pygame.Color(player2_color), score_x_location + score_x_offset, score_y_location + 28, False)
+        self.show_text("Lives: x x x", 16, pygame.Color(player2_color), score_x_location-1, score_y_location + 28 + 28, False)
+
+        # Instructions
+        instruc_y = window_height-27
+        self.show_text("Player 1 - Use WASD to move.", 14, pygame.Color(player1_color), 10, instruc_y, False)
+        self.show_text("Player 2 - Use arrow keys to move", 14, pygame.Color(player2_color), 480, instruc_y, False)
 
     def show_text(self, text, font_size, font_color, x, y, is_centered):
         font = pygame.font.Font("../fonts/minecraft.ttf", font_size)
@@ -261,7 +286,7 @@ class Main():
         for collec in self.collectible_list:
             if Utils.do_rects_intersect(self.player1.rect.x, self.player1.rect.y, self.player1.rect.h, self.player1.rect.w, collec.rect.x, collec.rect.y, collec.rect.h, collec.rect.w):
                 # Increase the score
-                self.player1.score += 1
+                self.player1.score += 10
                 # Delete the collectible
                 self.collectible_list.remove(collec)
                 self.all_sprite_list.remove(collec)
@@ -385,7 +410,7 @@ class Collectible(pygame.sprite.Sprite):
         cookie_number = random.randint(1,7)
 
         # Load the image
-        self.image = pygame.image.load("../images/cookies/cookie-%d.png" % cookie_number).convert()
+        self.image = pygame.image.load("../images/allcookies/cookie-%d.png" % cookie_number).convert_alpha()
         self.image = pygame.transform.scale(self.image, (35, 29))
 
         # Set background color to be transparent
