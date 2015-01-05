@@ -7,10 +7,10 @@ from pygame.locals import *
 import Utils
 from Interactable import Interactable
 
-# No. of walls, coins, and holes
+# No. of walls, coins, and asteroids
 num_of_walls = 7
-num_of_collectibles = 8
-num_of_holes = 5
+num_of_cookies = 8
+num_of_asteroids = 5
 
 # Range of wall lengths
 min_wall_length = 50
@@ -45,7 +45,7 @@ y_acc_booster = 0.038
 # Background color
 background_color = pygame.Color('black')
 
-# Spacing in between walls, collectibles and black holes
+# Spacing in between walls, cookies and asteroids
 gap_between_interactables = 40
 
 key_held = None
@@ -67,8 +67,10 @@ class Main():
         self.all_sprite_list = pygame.sprite.Group()
         # List of walls. (x_pos, y_pos, width, height)
         self.wall_list = pygame.sprite.Group()
-        # Collectibles
-        self.collectible_list = pygame.sprite.Group()
+        # Cookies
+        self.cookie_list = pygame.sprite.Group()
+        # Asteroids
+        self.asteroid_list = pygame.sprite.Group()
 
         screensize = (window_width, window_height)
         self.surface = pygame.display.set_mode(screensize)
@@ -86,8 +88,11 @@ class Main():
         self.player1 = Player(player1_initial_x, player1_initial_y, initial_x_velocity, initial_y_velocity, self.wall_list)
         self.all_sprite_list.add(self.player1)
 
-        # ----- Making the collectibles
-        self.make_the_collectibles()
+        # ----- Making the cookies
+        self.make_the_cookies()
+
+        # ----- Making the asteroids
+        self.make_the_asteroids()
 
         quit_game = False
         key_held = []
@@ -141,14 +146,14 @@ class Main():
                     # To quit when the close button is clicked
                     quit_game = True
 
-    def make_the_collectibles(self):
+    def make_the_cookies(self):
         global interactables
 
-        # --- Random collectibles
-        for i in range(1, num_of_collectibles):
+        # --- Random cookies
+        for i in range(1, num_of_cookies):
             # While the wall generated is valid (not overlapping with anything else)
-            is_invalid_collectible = True
-            while is_invalid_collectible:
+            is_invalid_cookie = True
+            while is_invalid_cookie:
                 # Random length
                 wall_length = 20
                 wall_height = 20
@@ -158,20 +163,53 @@ class Main():
                                               window_width - (boundary_wall_padding * 2) - 30 - wall_length)
                 wall_y_coord = random.randint(distance_from_top + 50, play_area_size)
 
-                # Check if this wall is valid
-                is_invalid_collectible = Utils.is_overlapping(wall_x_coord, wall_y_coord, wall_height, wall_length,
+                # Check if this cookie is valid
+                is_invalid_cookie = Utils.is_overlapping(wall_x_coord, wall_y_coord, wall_height, wall_length,
                                                               interactables, gap_between_interactables)
 
-                # Make the collectible
-                if not is_invalid_collectible:
-                    collectible = Collectible(wall_x_coord, wall_y_coord)
-                    self.collectible_list.add(collectible)
-                    self.all_sprite_list.add(collectible)
+                # Make the cookie
+                if not is_invalid_cookie:
+                    cookie = Cookie(wall_x_coord, wall_y_coord)
+                    self.cookie_list.add(cookie)
+                    self.all_sprite_list.add(cookie)
                     # self.make_horiz_wall(wall_x_coord, wall_y_coord, wall_height, wall_length)
 
                     # Add wall data to list
-                    the_collectible = Interactable(wall_x_coord, wall_y_coord, wall_height, wall_length)
-                    interactables.append(the_collectible)
+                    the_cookie = Interactable(wall_x_coord, wall_y_coord, wall_height, wall_length)
+                    interactables.append(the_cookie)
+
+    def make_the_asteroids(self):
+            global interactables
+
+            # --- Random asteroids
+            for i in range(1, num_of_asteroids):
+                # While the wall generated is valid (not overlapping with anything else)
+                is_invalid_asteroid = True
+                while is_invalid_asteroid:
+                    # Random length
+                    wall_length = 20
+                    wall_height = 20
+
+                    # Random x and y coords
+                    wall_x_coord = random.randint(boundary_wall_padding + 50,
+                                                  window_width - (boundary_wall_padding * 2) - 30 - wall_length)
+                    wall_y_coord = random.randint(distance_from_top + 50, play_area_size)
+
+                    # Check if this cookie is valid
+                    is_invalid_asteroid = Utils.is_overlapping(wall_x_coord, wall_y_coord, wall_height, wall_length,
+                                                                  interactables, gap_between_interactables)
+
+                    # Make the cookie
+                    if not is_invalid_asteroid:
+                        asteroid = Asteroid(wall_x_coord, wall_y_coord)
+                        self.asteroid_list.add(asteroid)
+                        self.all_sprite_list.add(asteroid)
+                        # self.make_horiz_wall(wall_x_coord, wall_y_coord, wall_height, wall_length)
+
+                        # Add wall data to list
+                        the_asteroid = Interactable(wall_x_coord, wall_y_coord, wall_height, wall_length)
+                        interactables.append(the_asteroid)
+
 
     def make_the_walls(self):
         global interactables
@@ -282,13 +320,13 @@ class Main():
 
     def check_for_collisions(self):
 
-        # Any collectibles collected?
-        for collec in self.collectible_list:
+        # Any cookies collected?
+        for collec in self.cookie_list:
             if Utils.do_rects_intersect(self.player1.rect.x, self.player1.rect.y, self.player1.rect.h, self.player1.rect.w, collec.rect.x, collec.rect.y, collec.rect.h, collec.rect.w):
                 # Increase the score
                 self.player1.score += 10
-                # Delete the collectible
-                self.collectible_list.remove(collec)
+                # Delete the cookie
+                self.cookie_list.remove(collec)
                 self.all_sprite_list.remove(collec)
 
 
@@ -324,9 +362,15 @@ class Player(pygame.sprite.Sprite):
         # While the key is held
         if key_held is not None:
             if "UP" in key_held:
-                self.y_velocity += y_acc_booster
+                if self.y_orientation == -1:
+                    self.y_velocity += y_acc_booster
+                else:
+                    self.y_velocity -= y_acc_booster
             if "DOWN" in key_held:
-                self.y_velocity -= y_acc_booster
+                if self.y_orientation == 1:
+                    self.y_velocity += y_acc_booster
+                else:
+                    self.y_velocity -= y_acc_booster
             if "LEFT" in key_held:
                 if self.x_orientation == 1:
                     self.x_velocity -= x_acc_booster
@@ -340,11 +384,10 @@ class Player(pygame.sprite.Sprite):
 
         # Instead of letting acceleration go negative
         # in the y-direction, force it to be zero
-        if self.y_velocity < 0.000:
-            # self.y_velocity = math.fabs(self.y_velocity)
-            self.y_velocity = 0.000
-            # self.y_orientation = -1
-        elif self.y_velocity > y_max_velocity:
+        # if self.y_velocity < 0.000:
+        #     self.y_velocity = 0.000
+
+        if self.y_velocity > y_max_velocity:
             self.y_velocity = y_max_velocity
             # if x_velocity < 0.000:
             # x_velocity = 0.04
@@ -401,7 +444,7 @@ class Wall(pygame.sprite.Sprite):
         self.rect.y = y
 
 
-class Collectible(pygame.sprite.Sprite):
+class Cookie(pygame.sprite.Sprite):
     def __init__(self, x, y):
         # Call the parent's constructor
         pygame.sprite.Sprite.__init__(self)
@@ -412,6 +455,25 @@ class Collectible(pygame.sprite.Sprite):
         # Load the image
         self.image = pygame.image.load("../images/allcookies/cookie-%d.png" % cookie_number).convert_alpha()
         self.image = pygame.transform.scale(self.image, (35, 29))
+
+        # Set background color to be transparent
+        self.image.set_colorkey(background_color)
+
+        # Make our top-left corner the passed-in location.
+        self.rect = self.image.get_rect()
+
+        self.rect.x = x
+        self.rect.y = y
+
+
+class Asteroid(pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        # Call the parent's constructor
+        pygame.sprite.Sprite.__init__(self)
+
+        # Load the image
+        self.image = pygame.image.load("../images/asteroid.png").convert_alpha()
+        self.image = pygame.transform.scale(self.image, (45, 45))
 
         # Set background color to be transparent
         self.image.set_colorkey(background_color)
