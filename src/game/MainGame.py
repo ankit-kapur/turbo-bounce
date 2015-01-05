@@ -1,6 +1,6 @@
 __author__ = 'ankitkap'
 
-import math
+import Crystal_title
 import random
 import pygame
 from pygame.locals import *
@@ -30,9 +30,13 @@ window_height = 600
 # Player 1
 player1_main_color = 'gold'
 player1_color = 'gold4'
+player1_img = "../images/doge.png"
+player1_img_dimensions = (60, 43)
 
 player2_main_color = 'gray62'
 player2_color = 'gray28'
+player2_img = "../images/pusheen.png"
+player2_img_dimensions = (60, 36)
 
 
 x_max_velocity = 5.0
@@ -80,13 +84,22 @@ class Main():
         self.make_the_walls()
 
         # ---- Making the players
+        # Initial velocities
+        initial_x_velocity = 0.4
+        initial_y_velocity = 0.4
+
+        # Player 1
         player1_initial_x = 50
         player1_initial_y = window_height - 100
-        # Initial velocities
-        initial_x_velocity = 0.2
-        initial_y_velocity = 0.1
-        self.player1 = Player(player1_initial_x, player1_initial_y, initial_x_velocity, initial_y_velocity, self.wall_list)
+        self.player1 = Player(1, player1_initial_x, player1_initial_y, initial_x_velocity, initial_y_velocity, self.wall_list, player1_img, player1_img_dimensions)
         self.all_sprite_list.add(self.player1)
+
+        # Player 2
+        player2_initial_x = window_width - 150
+        player2_initial_y = window_height - 100
+        # Initial velocities
+        self.player2 = Player(2, player2_initial_x, player2_initial_y, initial_x_velocity, initial_y_velocity, self.wall_list, player2_img, player2_img_dimensions)
+        self.all_sprite_list.add(self.player2)
 
         # ----- Making the cookies
         self.make_the_cookies()
@@ -124,23 +137,41 @@ class Main():
                 if e.type is KEYUP:
                     if e.key == pygame.K_UP:
                         key_held.remove("UP")
-                    elif e.key == pygame.K_DOWN:
+                    if e.key == pygame.K_DOWN:
                         key_held.remove("DOWN")
-                    elif e.key == pygame.K_LEFT:
+                    if e.key == pygame.K_LEFT:
                         key_held.remove("LEFT")
-                    elif e.key == pygame.K_RIGHT:
+                    if e.key == pygame.K_RIGHT:
                         key_held.remove("RIGHT")
+
+                    if e.key == pygame.K_w:
+                        key_held.remove("W")
+                    if e.key == pygame.K_a:
+                        key_held.remove("A")
+                    if e.key == pygame.K_s:
+                        key_held.remove("S")
+                    if e.key == pygame.K_d:
+                        key_held.remove("D")
                 if e.type is KEYDOWN:
                     if e.key == pygame.K_ESCAPE:
                         quit_game = True
-                    elif e.key == pygame.K_UP:
+                    if e.key == pygame.K_UP:
                         key_held.append("UP")
-                    elif e.key == pygame.K_DOWN:
+                    if e.key == pygame.K_DOWN:
                         key_held.append("DOWN")
-                    elif e.key == pygame.K_LEFT:
+                    if e.key == pygame.K_LEFT:
                         key_held.append("LEFT")
-                    elif e.key == pygame.K_RIGHT:
+                    if e.key == pygame.K_RIGHT:
                         key_held.append("RIGHT")
+
+                    if e.key == pygame.K_w:
+                        key_held.append("W")
+                    if e.key == pygame.K_a:
+                        key_held.append("A")
+                    if e.key == pygame.K_s:
+                        key_held.append("S")
+                    if e.key == pygame.K_d:
+                        key_held.append("D")
 
                 if e.type is QUIT:
                     # To quit when the close button is clicked
@@ -265,7 +296,8 @@ class Main():
             self.all_sprite_list.add(wall)
 
     def show_text_banners(self):
-        self.show_text("TURBO BOUNCE", 28, pygame.Color('dodgerblue2'), None, 10, True)
+        self.show_title_text("TURBO BOUNCE", 28, pygame.Color('dodgerblue2'), None, 10, True)
+
         self.show_text("Created by Ankit Kapur", 14, pygame.Color('dodgerblue4'), None, 50, True)
 
         # Player information
@@ -294,13 +326,30 @@ class Main():
         score_x_location = 660
         score_y_location = 15
         self.show_text("PLAYER 2", 18, pygame.Color(player2_main_color), score_x_location, score_y_location, False)
-        self.show_text("Score: %d" % self.player1.score, 16, pygame.Color(player2_color), score_x_location + score_x_offset, score_y_location + 28, False)
+        self.show_text("Score: %d" % self.player2.score, 16, pygame.Color(player2_color), score_x_location + score_x_offset, score_y_location + 28, False)
         self.show_text("Lives: x x x", 16, pygame.Color(player2_color), score_x_location-1, score_y_location + 28 + 28, False)
 
         # Instructions
         instruc_y = window_height-27
         self.show_text("Player 1 - Use WASD to move.", 14, pygame.Color(player1_color), 10, instruc_y, False)
         self.show_text("Player 2 - Use arrow keys to move", 14, pygame.Color(player2_color), 480, instruc_y, False)
+
+    def show_title_text(self, text, font_size, font_color, x, y, is_centered):
+        font = pygame.font.Font("../fonts/minecraft.ttf", font_size)
+
+        # Render text
+        text_surf = Crystal_title.textCrystal(font, text, 2, font_color, 170)
+        # text_surf = font.render(text, 1, font_color)
+
+        if is_centered:
+            textpos = text_surf.get_rect()
+            textpos.centerx = self.surface.get_rect().centerx
+            textpos.y = y
+        else:
+            textpos = (x, y)
+
+        # Blit it
+        self.surface.blit(text_surf, textpos)
 
     def show_text(self, text, font_size, font_color, x, y, is_centered):
         font = pygame.font.Font("../fonts/minecraft.ttf", font_size)
@@ -329,18 +378,33 @@ class Main():
                 self.cookie_list.remove(collec)
                 self.all_sprite_list.remove(collec)
 
+            if Utils.do_rects_intersect(self.player2.rect.x, self.player2.rect.y, self.player2.rect.h, self.player2.rect.w, collec.rect.x, collec.rect.y, collec.rect.h, collec.rect.w):
+                # Increase the score
+                self.player2.score += 10
+                # Delete the cookie
+                self.cookie_list.remove(collec)
+                self.all_sprite_list.remove(collec)
+
+        # Any asteroids hit?
+        # for collec in self.asteroid_list:
+        #     if Utils.do_rects_intersect(self.player1.rect.x, self.player1.rect.y, self.player1.rect.h, self.player1.rect.w, collec.rect.x, collec.rect.y, collec.rect.h, collec.rect.w):
+
+
 
 class Player(pygame.sprite.Sprite):
-    def __init__(self, x, y, initial_x_velocity, initial_y_velocity, wall_list):
+    def __init__(self, player_num, x, y, initial_x_velocity, initial_y_velocity, wall_list, img_src, img_dimensions):
         # Call the parent class (Sprite) constructor
         pygame.sprite.Sprite.__init__(self)
 
         # Score is initially zero
         self.score = 0
 
+        # Player number
+        self.player_num = player_num
+
         # Load the image
-        self.image = pygame.image.load("../images/doge.png")
-        self.image = pygame.transform.scale(self.image, (45, 35)).convert_alpha()
+        self.image = pygame.image.load(img_src)
+        self.image = pygame.transform.scale(self.image, img_dimensions).convert_alpha()
 
         # Make our top-left corner the passed-in location.
         self.rect = self.image.get_rect()
@@ -361,37 +425,35 @@ class Player(pygame.sprite.Sprite):
 
         # While the key is held
         if key_held is not None:
-            if "UP" in key_held:
+            if ("UP" in key_held and self.player_num==1) or ("W" in key_held and self.player_num==2):
                 if self.y_orientation == -1:
                     self.y_velocity += y_acc_booster
                 else:
                     self.y_velocity -= y_acc_booster
-            if "DOWN" in key_held:
+            if ("DOWN" in key_held and self.player_num==1) or ("S" in key_held and self.player_num==2):
                 if self.y_orientation == 1:
                     self.y_velocity += y_acc_booster
                 else:
                     self.y_velocity -= y_acc_booster
-            if "LEFT" in key_held:
+            if ("LEFT" in key_held and self.player_num==1) or ("A" in key_held and self.player_num==2):
                 if self.x_orientation == 1:
                     self.x_velocity -= x_acc_booster
                 else:
                     self.x_velocity += x_acc_booster
-            if "RIGHT" in key_held:
+            if ("RIGHT" in key_held and self.player_num==1) or ("D" in key_held and self.player_num==2):
                 if self.x_orientation == -1:
                     self.x_velocity -= x_acc_booster
                 else:
                     self.x_velocity += x_acc_booster
 
-        # Instead of letting acceleration go negative
-        # in the y-direction, force it to be zero
-        # if self.y_velocity < 0.000:
-        #     self.y_velocity = 0.000
-
+        # Restrict max velocities
         if self.y_velocity > y_max_velocity:
             self.y_velocity = y_max_velocity
-            # if x_velocity < 0.000:
-            # x_velocity = 0.04
 
+        if self.x_velocity > x_max_velocity:
+            self.x_velocity = x_max_velocity
+
+        # TODO: Should I do this for y-direction as well?
         if self.x_velocity < 0.000:
             self.x_velocity = 0.000
             if "LEFT" in key_held:
@@ -399,8 +461,10 @@ class Player(pygame.sprite.Sprite):
             elif "RIGHT" in key_held:
                 self.x_orientation = 1
 
-        elif self.x_velocity > x_max_velocity:
-            self.x_velocity = x_max_velocity
+        # Instead of letting acceleration go negative
+        # in the y-direction, force it to be zero
+        # if self.y_velocity < 0.000:
+        #     self.y_velocity = 0.000
 
     def update(self):
 
