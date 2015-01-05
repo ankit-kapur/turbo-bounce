@@ -1,71 +1,77 @@
-import os, sys, pygame, pygame.font, pygame.image
-from pygame.locals import *
+# the next line is only needed for python2.x and not necessary for python3.x
+from __future__ import print_function, division
+import pygame
+import random
+import os
 
+pygame.init()
+folder = "../images/"  # replace with "." if pictures lay in the same folder as program
+try:
+    spritesheet = pygame.image.load(os.path.join(folder, "explosion_spritesheet.png"))
+except:
+    raise (UserWarning, "i'm unable to load 'cahr9.bmp' form the folder 'data'")  # error msg and exit
 
-def shadeColor(color, amount):
-    """Brightens or darkens color by amount (-255 - 255)."""
-    r = color[0] + amount
-    g = color[1] + amount
-    b = color[2] + amount
-    if r > 255: r = 255
-    if r < 0:   r = 0
-    if g > 255: g = 255
-    if g < 0:   g = 0
-    if b > 255: b = 255
-    if b < 0:   b = 0
-    return (r, g, b)
+screen = pygame.display.set_mode((800, 480))  # try out larger values and see what happens !
+spritesheet.convert()  # convert only works afteer display_setmode is set.
+screenrect = screen.get_rect()
+background = pygame.Surface((screen.get_size()))
+backgroundrect = background.get_rect()
+background.fill((255, 255, 255))  # fill white
+background = background.convert()
+screen.blit(background, (0, 0))
 
+lions = []  # a list for the lion images
+# the spritesheet has lions, 128 x 64 pixels
+for nbr in range(1, 5, 1):  # first line contains 4 pictures of lions
+    lions.append(spritesheet.subsurface((127 * (nbr - 1), 64, 127, 127)))
+# for nbr in range(5, 7, 1):  # second line contains 2 pictures of lions
+#     lions.append(spritesheet.subsurface((127 * (nbr - 5), 262 - 64, 127, 127)))
+print("len:", len(lions))
 
-def textCrystal(font, message, bevel=5, fontcolor=(64, 128, 255), contrast=70):
-    """Renders text with a 'crystal' style apperance."""
-    base = font.render(message, 0, fontcolor)
-    size = base.get_width() + bevel*2, base.get_height() + bevel*2+2
-    img = pygame.Surface(size, 16)
+for nbr in range(len(lions)):
+    lions[nbr].set_colorkey((0, 0, 0))  # black transparent
+    lions[nbr] = lions[nbr].convert_alpha()
+    print("converted nbr", nbr)
 
-    tl = (-1, -1)
-    tc = (0, -1)
-    tr = (1, -1)
-    cr = (1, 0)
-    br = (1, 1)
-    bc = (0, 1)
-    bl = (-1, 1)
-    cl = (-1, 0)
+for nbr in range(len(lions)):
+    screen.blit(lions[nbr], (nbr * 127, 0))  #blit the ball surface on the screen (on top of background)
+    print("blitted nbr", nbr)
 
-    for x in range(-bevel, 1, 1):
-        for position in (tl, tr, br, bl, tc, cr, bc, cl):
-            for location in (tl, tr, br, bl, tc, cr, bc, cl):
-                shade = ((-location[0])-location[1])*contrast
-                img.blit(font.render(message, 1, shadeColor(fontcolor, shade)),
-                         (bevel+location[0]+(x*position[0]), bevel+location[1]+(x*position[1])))
-        img.blit(font.render(message, 1, fontcolor), (bevel, bevel))
-    return img
+screen.blit(lions[nbr], (nbr * 127, 0))  #blit the ball surface on the screen (on top of background)
+#screen.blit(lions[1], (x, 
+clock = pygame.time.Clock()  #create pygame clock object
+mainloop = True
+FPS = 60  # desired max. framerate in frames per second.
+playtime = 0
+cycletime = 0
+#newnr = 0 # index of the first lionimage to display
+#oldnr = 0 # needed to compare if image has changed
+interval = .15  # how long one single images should be displayed in seconds
+picnr = 0
+while mainloop:
+    milliseconds = clock.tick(FPS)  # milliseconds passed since last frame
+    seconds = milliseconds / 1000.0  # seconds passed since last frame (float)
+    playtime += seconds
+    cycletime += seconds
+    if cycletime > interval:
+        mypicture = lions[picnr]  ##
+        screen.blit(background.subsurface((300, 300, 128, 66)), (300, 300))  ##
+        screen.blit(mypicture, (300, 300))
+        picnr += 1
+        if picnr > 5:
+            picnr = 0
+        cycletime = 0
 
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            mainloop = False  # pygame window closed by user
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_ESCAPE:
+                mainloop = False  # user pressed ESC
 
-entry_info = 'Turbo bounce'
+    pygame.display.set_caption("[FPS]: %.2f picture: %i" % (clock.get_fps(), picnr))
+    #this would repaint the whole screen (secure, but slow)
+    #screen.blit(background, (0,0))     #draw background on screen (overwriting all)
 
-
-#this code will display our work, if the script is run...
-if __name__ == '__main__':
-    pygame.init()
-
-    #create our fancy text
-    white = 255, 255, 255
-    grey = 100, 100, 100
-    bigfont = pygame.font.Font("../fonts/minecraft.ttf", 30)
-    text = textCrystal(bigfont, entry_info, 4, (64, 128, 255), 170)
-
-    #create a window the correct size
-    win = pygame.display.set_mode(text.get_size())
-    winrect = win.get_rect()
-    win.blit(text, (0, 0))
-    pygame.display.flip()
-
-    #wait for the finish
-    while 1:
-        event = pygame.event.wait()
-        if event.type is KEYDOWN and event.key == K_s: #save it
-            name = os.path.splitext(sys.argv[0])[0] + '.bmp'
-            print 'Saving image to:', name
-            pygame.image.save(win, name)
-        elif event.type in (QUIT,KEYDOWN,MOUSEBUTTONDOWN):
-            break
+    pygame.display.flip()  # flip the screen 30 times a second
+print("This 'game' was played for {:.2f} seconds".format(playtime))

@@ -15,7 +15,6 @@ def shadeColor(color, amount):
     if b < 0:   b = 0
     return (r, g, b)
 
-
 def textCrystal(font, message, bevel=5, fontcolor=(64, 128, 255), contrast=70):
     """Renders text with a 'crystal' style apperance."""
     base = font.render(message, 0, fontcolor)
@@ -39,33 +38,3 @@ def textCrystal(font, message, bevel=5, fontcolor=(64, 128, 255), contrast=70):
                          (bevel + location[0] + (x * position[0]), bevel + location[1] + (x * position[1])))
         img.blit(font.render(message, 1, fontcolor), (bevel, bevel))
     return img
-
-
-entry_info = 'Turbo bounce'
-
-
-# this code will display our work, if the script is run...
-if __name__ == '__main__':
-    pygame.init()
-
-    #create our fancy text
-    white = 255, 255, 255
-    grey = 100, 100, 100
-    bigfont = pygame.font.Font("../fonts/minecraft.ttf", 30)
-    text = textCrystal(bigfont, entry_info, 4, (64, 128, 255), 170)
-
-    #create a window the correct size
-    win = pygame.display.set_mode(text.get_size())
-    winrect = win.get_rect()
-    win.blit(text, (0, 0))
-    pygame.display.flip()
-
-    #wait for the finish
-    while 1:
-        event = pygame.event.wait()
-        if event.type is KEYDOWN and event.key == K_s:  #save it
-            name = os.path.splitext(sys.argv[0])[0] + '.bmp'
-            print 'Saving image to:', name
-            pygame.image.save(win, name)
-        elif event.type in (QUIT, KEYDOWN, MOUSEBUTTONDOWN):
-            break

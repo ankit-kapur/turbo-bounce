@@ -10,7 +10,7 @@ from Interactable import Interactable
 # No. of walls, coins, and asteroids
 num_of_walls = 7
 num_of_cookies = 8
-num_of_asteroids = 5
+num_of_asteroids = 9
 
 # Range of wall lengths
 min_wall_length = 50
@@ -38,7 +38,6 @@ player2_color = 'gray28'
 player2_img = "../images/pusheen.png"
 player2_img_dimensions = (60, 36)
 
-
 x_max_velocity = 5.0
 y_max_velocity = 7.0
 
@@ -55,8 +54,13 @@ gap_between_interactables = 40
 key_held = None
 interactables = []
 
+
 class Main():
     def __init__(self):
+
+        # Keeps track of explosion animations
+        self.explosion_player1 = None
+        self.explosion_player2 = None
 
         # Initialize stuff
         global interactables
@@ -91,14 +95,16 @@ class Main():
         # Player 1
         player1_initial_x = 50
         player1_initial_y = window_height - 100
-        self.player1 = Player(1, player1_initial_x, player1_initial_y, initial_x_velocity, initial_y_velocity, self.wall_list, player1_img, player1_img_dimensions)
+        self.player1 = Player(1, player1_initial_x, player1_initial_y, initial_x_velocity, initial_y_velocity,
+                              self.wall_list, player1_img, player1_img_dimensions)
         self.all_sprite_list.add(self.player1)
 
         # Player 2
-        player2_initial_x = window_width - 150
-        player2_initial_y = window_height - 100
+        player2_initial_x = window_width - 110
+        player2_initial_y = window_height - 91
         # Initial velocities
-        self.player2 = Player(2, player2_initial_x, player2_initial_y, initial_x_velocity, initial_y_velocity, self.wall_list, player2_img, player2_img_dimensions)
+        self.player2 = Player(2, player2_initial_x, player2_initial_y, initial_x_velocity, initial_y_velocity,
+                              self.wall_list, player2_img, player2_img_dimensions)
         self.all_sprite_list.add(self.player2)
 
         # ----- Making the cookies
@@ -106,6 +112,9 @@ class Main():
 
         # ----- Making the asteroids
         self.make_the_asteroids()
+
+        # ----- Hearts (representing player's lives
+        self.make_hearts()
 
         quit_game = False
         key_held = []
@@ -122,11 +131,14 @@ class Main():
 
             self.all_sprite_list.draw(self.surface)
 
-            # ----- Text banners
-            self.show_text_banners()
+            # Show static text banners
+            self.show_static_text_banners()
+
+            # ----- Dynamically changing text banners
+            self.show_dynamic_text_banners()
 
             # FPS
-            clock.tick(250)
+            clock.tick(60)
 
             # Go ahead and update the screen with what we've drawn.
             pygame.display.flip()
@@ -196,7 +208,7 @@ class Main():
 
                 # Check if this cookie is valid
                 is_invalid_cookie = Utils.is_overlapping(wall_x_coord, wall_y_coord, wall_height, wall_length,
-                                                              interactables, gap_between_interactables)
+                                                         interactables, gap_between_interactables)
 
                 # Make the cookie
                 if not is_invalid_cookie:
@@ -210,37 +222,36 @@ class Main():
                     interactables.append(the_cookie)
 
     def make_the_asteroids(self):
-            global interactables
+        global interactables
 
-            # --- Random asteroids
-            for i in range(1, num_of_asteroids):
-                # While the wall generated is valid (not overlapping with anything else)
-                is_invalid_asteroid = True
-                while is_invalid_asteroid:
-                    # Random length
-                    wall_length = 20
-                    wall_height = 20
+        # --- Random asteroids
+        for i in range(1, num_of_asteroids):
+            # While the wall generated is valid (not overlapping with anything else)
+            is_invalid_asteroid = True
+            while is_invalid_asteroid:
+                # Random length
+                wall_length = 20
+                wall_height = 20
 
-                    # Random x and y coords
-                    wall_x_coord = random.randint(boundary_wall_padding + 50,
-                                                  window_width - (boundary_wall_padding * 2) - 30 - wall_length)
-                    wall_y_coord = random.randint(distance_from_top + 50, play_area_size)
+                # Random x and y coords
+                wall_x_coord = random.randint(boundary_wall_padding + 50,
+                                              window_width - (boundary_wall_padding * 2) - 30 - wall_length)
+                wall_y_coord = random.randint(distance_from_top + 50, play_area_size)
 
-                    # Check if this cookie is valid
-                    is_invalid_asteroid = Utils.is_overlapping(wall_x_coord, wall_y_coord, wall_height, wall_length,
-                                                                  interactables, gap_between_interactables)
+                # Check if this cookie is valid
+                is_invalid_asteroid = Utils.is_overlapping(wall_x_coord, wall_y_coord, wall_height, wall_length,
+                                                           interactables, gap_between_interactables)
 
-                    # Make the cookie
-                    if not is_invalid_asteroid:
-                        asteroid = Asteroid(wall_x_coord, wall_y_coord)
-                        self.asteroid_list.add(asteroid)
-                        self.all_sprite_list.add(asteroid)
-                        # self.make_horiz_wall(wall_x_coord, wall_y_coord, wall_height, wall_length)
+                # Make the cookie
+                if not is_invalid_asteroid:
+                    asteroid = Asteroid(wall_x_coord, wall_y_coord)
+                    self.asteroid_list.add(asteroid)
+                    self.all_sprite_list.add(asteroid)
+                    # self.make_horiz_wall(wall_x_coord, wall_y_coord, wall_height, wall_length)
 
-                        # Add wall data to list
-                        the_asteroid = Interactable(wall_x_coord, wall_y_coord, wall_height, wall_length)
-                        interactables.append(the_asteroid)
-
+                    # Add wall data to list
+                    the_asteroid = Interactable(wall_x_coord, wall_y_coord, wall_height, wall_length)
+                    interactables.append(the_asteroid)
 
     def make_the_walls(self):
         global interactables
@@ -250,7 +261,8 @@ class Main():
         # Format: x, y, height, width
         self.make_horiz_wall(boundary_wall_padding / 2, distance_from_top, 10,
                              window_width - (boundary_wall_padding * 2))
-        self.make_horiz_wall(boundary_wall_padding / 2, window_height - (boundary_wall_padding * 1.5) - gap_from_bottom, 10,
+        self.make_horiz_wall(boundary_wall_padding / 2, window_height - (boundary_wall_padding * 1.5) - gap_from_bottom,
+                             10,
                              window_width - (boundary_wall_padding))
         self.make_vertical_wall(boundary_wall_padding / 2, distance_from_top,
                                 window_height - (boundary_wall_padding * 1.5) - distance_from_top - gap_from_bottom, 10)
@@ -295,44 +307,72 @@ class Main():
             self.wall_list.add(wall)
             self.all_sprite_list.add(wall)
 
-    def show_text_banners(self):
-        self.show_title_text("TURBO BOUNCE", 28, pygame.Color('dodgerblue2'), None, 10, True)
+    def make_hearts(self):
+        # Hearts/lives
+        heart_y = 15 + 28 + 28
+        gap = 25
+        heart_size = 20
 
+        # --- Hearts for player 1
+        heart_x = 50 + 60 - 15
+        self.heart1_player1 = Heart(heart_x, heart_y, heart_size)
+        self.heart2_player1 = Heart(heart_x + gap, heart_y, heart_size)
+        self.heart3_player1 = Heart(heart_x + (gap * 2), heart_y, heart_size)
+        self.all_sprite_list.add(self.heart1_player1)
+        self.all_sprite_list.add(self.heart2_player1)
+        self.all_sprite_list.add(self.heart3_player1)
+
+        # --- Hearts for player 2
+        heart_x = 660 + 60 - 15
+        self.heart1_player2 = Heart(heart_x, heart_y, heart_size)
+        self.heart2_player2 = Heart(heart_x + gap, heart_y, heart_size)
+        self.heart3_player2 = Heart(heart_x + (gap * 2), heart_y, heart_size)
+        self.all_sprite_list.add(self.heart1_player2)
+        self.all_sprite_list.add(self.heart2_player2)
+        self.all_sprite_list.add(self.heart3_player2)
+
+    def show_static_text_banners(self):
+        # Title
+        self.show_title_text("TURBO BOUNCE", 28, pygame.Color('dodgerblue2'), None, 10, True)
         self.show_text("Created by Ankit Kapur", 14, pygame.Color('dodgerblue4'), None, 50, True)
 
-        # Player information
-        info_xpos = 620
-        info_ypos = 150
-        x_vel = "x-veloc: %.3f" % self.player1.x_velocity
-        x_ori = "x-orien: %.3f" % self.player1.x_orientation
-        y_vel = "y-veloc: %.3f" % self.player1.y_velocity
-        y_ori = "y-orien: %.3f" % self.player1.y_orientation
+        # Instructions
+        instruc_y = window_height - 27
+        self.show_text("Player 1 - Use WASD to move.", 14, pygame.Color(player1_color), 10, instruc_y, False)
+        self.show_text("Player 2 - Use arrow keys to move", 14, pygame.Color(player2_color), 480, instruc_y, False)
 
-        self.show_text(x_vel, 13, pygame.Color('gray45'), info_xpos, info_ypos, False)
-        self.show_text(x_ori, 13, pygame.Color('gray45'), info_xpos, info_ypos + 23, False)
-        self.show_text(y_vel, 13, pygame.Color('gray45'), info_xpos, info_ypos + 23 + 33, False)
-        self.show_text(y_ori, 13, pygame.Color('gray45'), info_xpos, info_ypos + 23 + 33 + 23, False)
-
-        score_x_offset = 8
-
+    def show_dynamic_text_banners(self):
         # Player 1 information
+        score_x_offset = 8
         score_x_location = 50
         score_y_location = 15
         self.show_text("PLAYER 1", 18, pygame.Color(player1_main_color), score_x_location, score_y_location, False)
-        self.show_text("Score: %d" % self.player1.score, 16, pygame.Color(player1_color), score_x_location + score_x_offset, score_y_location + 28, False)
-        self.show_text("Lives: x x x", 16, pygame.Color(player1_color), score_x_location-1, score_y_location + 28 + 28, False)
+        self.show_text("Score: %d" % self.player1.score, 16, pygame.Color(player1_color),
+                       score_x_location + score_x_offset, score_y_location + 28, False)
+        self.show_text("Lives: ", 16, pygame.Color(player1_color), score_x_location - 15, score_y_location + 28 + 28,
+                       False)
 
         # Player 2 information
         score_x_location = 660
         score_y_location = 15
         self.show_text("PLAYER 2", 18, pygame.Color(player2_main_color), score_x_location, score_y_location, False)
-        self.show_text("Score: %d" % self.player2.score, 16, pygame.Color(player2_color), score_x_location + score_x_offset, score_y_location + 28, False)
-        self.show_text("Lives: x x x", 16, pygame.Color(player2_color), score_x_location-1, score_y_location + 28 + 28, False)
+        self.show_text("Score: %d" % self.player2.score, 16, pygame.Color(player2_color),
+                       score_x_location + score_x_offset, score_y_location + 28, False)
+        self.show_text("Lives: ", 16, pygame.Color(player2_color), score_x_location - 15, score_y_location + 28 + 28,
+                       False)
 
-        # Instructions
-        instruc_y = window_height-27
-        self.show_text("Player 1 - Use WASD to move.", 14, pygame.Color(player1_color), 10, instruc_y, False)
-        self.show_text("Player 2 - Use arrow keys to move", 14, pygame.Color(player2_color), 480, instruc_y, False)
+        # Debugging information
+        # info_xpos = 620
+        # info_ypos = 150
+        # x_vel = "x-veloc: %.3f" % self.player1.x_velocity
+        # x_ori = "x-orien: %.3f" % self.player1.x_orientation
+        # y_vel = "y-veloc: %.3f" % self.player1.y_velocity
+        # y_ori = "y-orien: %.3f" % self.player1.y_orientation
+
+        # self.show_text(x_vel, 13, pygame.Color('gray45'), info_xpos, info_ypos, False)
+        # self.show_text(x_ori, 13, pygame.Color('gray45'), info_xpos, info_ypos + 23, False)
+        # self.show_text(y_vel, 13, pygame.Color('gray45'), info_xpos, info_ypos + 23 + 33, False)
+        # self.show_text(y_ori, 13, pygame.Color('gray45'), info_xpos, info_ypos + 23 + 33 + 23, False)
 
     def show_title_text(self, text, font_size, font_color, x, y, is_centered):
         font = pygame.font.Font("../fonts/minecraft.ttf", font_size)
@@ -371,24 +411,72 @@ class Main():
 
         # Any cookies collected?
         for collec in self.cookie_list:
-            if Utils.do_rects_intersect(self.player1.rect.x, self.player1.rect.y, self.player1.rect.h, self.player1.rect.w, collec.rect.x, collec.rect.y, collec.rect.h, collec.rect.w):
+            if Utils.do_rects_intersect(self.player1.rect.x, self.player1.rect.y, self.player1.rect.h,
+                                        self.player1.rect.w, collec.rect.x, collec.rect.y, collec.rect.h,
+                                        collec.rect.w):
                 # Increase the score
                 self.player1.score += 10
                 # Delete the cookie
                 self.cookie_list.remove(collec)
                 self.all_sprite_list.remove(collec)
 
-            if Utils.do_rects_intersect(self.player2.rect.x, self.player2.rect.y, self.player2.rect.h, self.player2.rect.w, collec.rect.x, collec.rect.y, collec.rect.h, collec.rect.w):
+            if Utils.do_rects_intersect(self.player2.rect.x, self.player2.rect.y, self.player2.rect.h,
+                                        self.player2.rect.w, collec.rect.x, collec.rect.y, collec.rect.h,
+                                        collec.rect.w):
                 # Increase the score
                 self.player2.score += 10
                 # Delete the cookie
                 self.cookie_list.remove(collec)
                 self.all_sprite_list.remove(collec)
 
-        # Any asteroids hit?
-        # for collec in self.asteroid_list:
-        #     if Utils.do_rects_intersect(self.player1.rect.x, self.player1.rect.y, self.player1.rect.h, self.player1.rect.w, collec.rect.x, collec.rect.y, collec.rect.h, collec.rect.w):
+        # ------------ Asteroid collisions are handled here ------------- #
+        # --- Player 1 --- #
+        # If there's any explosions happening, make the next explosion frame
+        if self.explosion_player1 is not None:
+            are_we_done_yet = self.explosion_player1.explode()
 
+            # If the explosion animation's done, reset the player on the screen
+            if are_we_done_yet:
+                # Reset the player to his initial position
+                self.player1.reset_player_on_screen()
+                self.all_sprite_list.add(self.player1)
+                self.explosion_player1 = None
+
+                # Reduce score & life
+                self.player1.score -= 5
+                self.player1.reduce_life()
+        else:
+            # Any asteroids hit?
+            for collec in self.asteroid_list:
+                if Utils.do_rects_intersect(self.player1.rect.x, self.player1.rect.y, self.player1.rect.h,
+                                            self.player1.rect.w, collec.rect.x, collec.rect.y, collec.rect.h,
+                                            collec.rect.w):
+                    self.explosion_player1 = Explosion(self.player1.rect.x, self.player1.rect.y, self.surface)
+                    self.all_sprite_list.remove(self.player1)
+
+        # --- Player 2 --- #
+        # If there's any explosions happening, make the next explosion frame
+        if self.explosion_player2 is not None:
+            are_we_done_yet = self.explosion_player2.explode()
+
+            # If the explosion animation's done, reset the player on the screen
+            if are_we_done_yet:
+                # Reset the player to his initial position
+                self.player2.reset_player_on_screen()
+                self.all_sprite_list.add(self.player2)
+                self.explosion_player2 = None
+
+                # Reduce score & life
+                self.player2.score -= 5
+                self.player2.reduce_life()
+        else:
+            # Any asteroids hit?
+            for collec in self.asteroid_list:
+                if Utils.do_rects_intersect(self.player2.rect.x, self.player2.rect.y, self.player2.rect.h,
+                                            self.player2.rect.w, collec.rect.x, collec.rect.y, collec.rect.h,
+                                            collec.rect.w):
+                    self.explosion_player2 = Explosion(self.player2.rect.x, self.player2.rect.y, self.surface)
+                    self.all_sprite_list.remove(self.player2)
 
 
 class Player(pygame.sprite.Sprite):
@@ -398,6 +486,9 @@ class Player(pygame.sprite.Sprite):
 
         # Score is initially zero
         self.score = 0
+
+        # Initially the player has 3 lives
+        self.lives = 3
 
         # Player number
         self.player_num = player_num
@@ -409,38 +500,55 @@ class Player(pygame.sprite.Sprite):
         # Make our top-left corner the passed-in location.
         self.rect = self.image.get_rect()
 
-        self.rect.x = x
-        self.rect.y = y
+        # Store the starting position and velocity of the player
+        self.original_x = x
+        self.original_y = y
 
-        self.x_velocity = initial_x_velocity
-        self.y_velocity = initial_y_velocity
+        self.initial_x_velocity = initial_x_velocity
+        self.initial_y_velocity = initial_y_velocity
+
+        self.reset_player_on_screen()
 
         self.x_orientation = 1
         self.y_orientation = -1
 
         self.wall_list = wall_list
 
+    def reduce_life(self):
+        self.lives -= 1
+
+        # TODO: Handle this game-over scenario
+        if self.lives <= 0:
+            print "Game over for player %d" % self.player_num
+
+    def reset_player_on_screen(self):
+
+        self.rect.x = self.original_x
+        self.rect.y = self.original_y
+        self.x_velocity = self.initial_x_velocity
+        self.y_velocity = self.initial_y_velocity
+
     def deal_with_event(self):
         global key_held
 
         # While the key is held
         if key_held is not None:
-            if ("UP" in key_held and self.player_num==1) or ("W" in key_held and self.player_num==2):
+            if ("UP" in key_held and self.player_num == 2) or ("W" in key_held and self.player_num == 1):
                 if self.y_orientation == -1:
                     self.y_velocity += y_acc_booster
                 else:
                     self.y_velocity -= y_acc_booster
-            if ("DOWN" in key_held and self.player_num==1) or ("S" in key_held and self.player_num==2):
+            if ("DOWN" in key_held and self.player_num == 2) or ("S" in key_held and self.player_num == 1):
                 if self.y_orientation == 1:
                     self.y_velocity += y_acc_booster
                 else:
                     self.y_velocity -= y_acc_booster
-            if ("LEFT" in key_held and self.player_num==1) or ("A" in key_held and self.player_num==2):
+            if ("LEFT" in key_held and self.player_num == 2) or ("A" in key_held and self.player_num == 1):
                 if self.x_orientation == 1:
                     self.x_velocity -= x_acc_booster
                 else:
                     self.x_velocity += x_acc_booster
-            if ("RIGHT" in key_held and self.player_num==1) or ("D" in key_held and self.player_num==2):
+            if ("RIGHT" in key_held and self.player_num == 2) or ("D" in key_held and self.player_num == 1):
                 if self.x_orientation == -1:
                     self.x_velocity -= x_acc_booster
                 else:
@@ -456,15 +564,15 @@ class Player(pygame.sprite.Sprite):
         # TODO: Should I do this for y-direction as well?
         if self.x_velocity < 0.000:
             self.x_velocity = 0.000
-            if "LEFT" in key_held:
+            if ("LEFT" in key_held and self.player_num == 2) or ("A" in key_held and self.player_num == 1):
                 self.x_orientation = -1
-            elif "RIGHT" in key_held:
+            elif ("RIGHT" in key_held and self.player_num == 2) or ("D" in key_held and self.player_num == 1):
                 self.x_orientation = 1
 
-        # Instead of letting acceleration go negative
-        # in the y-direction, force it to be zero
-        # if self.y_velocity < 0.000:
-        #     self.y_velocity = 0.000
+                # Instead of letting acceleration go negative
+                # in the y-direction, force it to be zero
+                # if self.y_velocity < 0.000:
+                # self.y_velocity = 0.000
 
     def update(self):
 
@@ -514,7 +622,7 @@ class Cookie(pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self)
 
         # Random cookie
-        cookie_number = random.randint(1,7)
+        cookie_number = random.randint(1, 7)
 
         # Load the image
         self.image = pygame.image.load("../images/allcookies/cookie-%d.png" % cookie_number).convert_alpha()
@@ -549,8 +657,81 @@ class Asteroid(pygame.sprite.Sprite):
         self.rect.y = y
 
 
+class Explosion():
+    def __init__(self, x, y, surface):
+
+        # Load the image
+        self.image = pygame.image.load("../images/explosion_spritesheet.png").convert_alpha()
+
+        # Re-scaled image
+        self.height = 45
+        self.width = self.image.get_rect().w / (self.image.get_rect().h / 45)
+
+        self.image = pygame.transform.scale(self.image, (self.width, self.height))
+
+        # Set background color to be transparent
+        self.image.set_colorkey(background_color)
+
+        # Number of frames in the spritesheet
+        self.num_of_frames = 16
+
+        self.x = x
+        self.y = y
+
+        self.explosion_frame = 0
+
+        self.surface = surface
+
+        self.wait = 0
+
+    # Takes care of the explosion animation
+    def explode(self):
+
+        if self.explosion_frame >= (self.num_of_frames - 1):
+            # We're done with the explosion animation
+            return True
+        else:
+            self.surface.blit(self.image, [self.x, self.y], (
+                (self.explosion_frame % self.num_of_frames) * self.width / self.num_of_frames, 0,
+                self.width / self.num_of_frames, 45))
+            if self.wait % 10 == 0:
+                self.explosion_frame += 1
+            self.wait += 1
+
+            return False  # Not done yet
+
+
+class Heart(pygame.sprite.Sprite):
+    def __init__(self, x, y, heart_size):
+        # Call the parent's constructor
+        pygame.sprite.Sprite.__init__(self)
+
+        self.heart_size = heart_size
+
+        self.make_full_heart()
+
+        # Set background color to be transparent
+        self.image.set_colorkey(background_color)
+
+        # Make our top-left corner the passed-in location.
+        self.rect = self.image.get_rect()
+
+        self.rect.x = x
+        self.rect.y = y
+
+    def make_full_heart(self):
+        # Load the image
+        self.image = pygame.image.load("../images/heart_full.png").convert_alpha()
+        self.image = pygame.transform.scale(self.image, (self.heart_size, self.heart_size))
+
+    def make_empty_heart(self):
+        # Load the image
+        self.image = pygame.image.load("../images/heart_empty.png").convert_alpha()
+        self.image = pygame.transform.scale(self.image, (self.heart_size, self.heart_size))
+
+
 # class New_game_button:
-#     def __init__(self, text):
+# def __init__(self, text):
 
 
 Main()
