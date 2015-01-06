@@ -9,8 +9,8 @@ from Interactable import Interactable
 
 # No. of walls, coins, and asteroids
 num_of_walls = 7
-num_of_cookies = 8
-num_of_asteroids = 9
+num_of_cookies = 10
+num_of_asteroids = 5
 
 # Range of wall lengths
 min_wall_length = 50
@@ -106,6 +106,10 @@ class Main():
         self.player2 = Player(2, player2_initial_x, player2_initial_y, initial_x_velocity, initial_y_velocity,
                               self.wall_list, player2_img, player2_img_dimensions)
         self.all_sprite_list.add(self.player2)
+
+        # Let each player know its opponent
+        self.player1.other_player = self.player2
+        self.player2.other_player = self.player1
 
         # ----- Making the cookies
         self.make_the_cookies()
@@ -315,21 +319,21 @@ class Main():
 
         # --- Hearts for player 1
         heart_x = 50 + 60 - 15
-        self.heart1_player1 = Heart(heart_x, heart_y, heart_size)
-        self.heart2_player1 = Heart(heart_x + gap, heart_y, heart_size)
-        self.heart3_player1 = Heart(heart_x + (gap * 2), heart_y, heart_size)
-        self.all_sprite_list.add(self.heart1_player1)
-        self.all_sprite_list.add(self.heart2_player1)
-        self.all_sprite_list.add(self.heart3_player1)
+        self.player1.heart1 = Heart(heart_x, heart_y, heart_size)
+        self.player1.heart2 = Heart(heart_x + gap, heart_y, heart_size)
+        self.player1.heart3 = Heart(heart_x + (gap * 2), heart_y, heart_size)
+        self.all_sprite_list.add(self.player1.heart1)
+        self.all_sprite_list.add(self.player1.heart2)
+        self.all_sprite_list.add(self.player1.heart3)
 
         # --- Hearts for player 2
         heart_x = 660 + 60 - 15
-        self.heart1_player2 = Heart(heart_x, heart_y, heart_size)
-        self.heart2_player2 = Heart(heart_x + gap, heart_y, heart_size)
-        self.heart3_player2 = Heart(heart_x + (gap * 2), heart_y, heart_size)
-        self.all_sprite_list.add(self.heart1_player2)
-        self.all_sprite_list.add(self.heart2_player2)
-        self.all_sprite_list.add(self.heart3_player2)
+        self.player2.heart1 = Heart(heart_x, heart_y, heart_size)
+        self.player2.heart2 = Heart(heart_x + gap, heart_y, heart_size)
+        self.player2.heart3 = Heart(heart_x + (gap * 2), heart_y, heart_size)
+        self.all_sprite_list.add(self.player2.heart1)
+        self.all_sprite_list.add(self.player2.heart2)
+        self.all_sprite_list.add(self.player2.heart3)
 
     def show_static_text_banners(self):
         # Title
@@ -352,7 +356,7 @@ class Main():
         self.show_text("Lives: ", 16, pygame.Color(player1_color), score_x_location - 15, score_y_location + 28 + 28,
                        False)
 
-        # Player 2 information
+        # Player 2 informationpy
         score_x_location = 660
         score_y_location = 15
         self.show_text("PLAYER 2", 18, pygame.Color(player2_main_color), score_x_location, score_y_location, False)
@@ -373,6 +377,18 @@ class Main():
         # self.show_text(x_ori, 13, pygame.Color('gray45'), info_xpos, info_ypos + 23, False)
         # self.show_text(y_vel, 13, pygame.Color('gray45'), info_xpos, info_ypos + 23 + 33, False)
         # self.show_text(y_ori, 13, pygame.Color('gray45'), info_xpos, info_ypos + 23 + 33 + 23, False)
+
+    def change_hearts(self, player):
+        player.heart1.make_heart_empty()
+        player.heart2.make_heart_empty()
+        player.heart3.make_heart_empty()
+
+        if player.lives >= 1:
+            player.heart1.make_heart_full()
+        if player.lives >= 2:
+            player.heart2.make_heart_full()
+        if player.lives >= 3:
+            player.heart3.make_heart_full()
 
     def show_title_text(self, text, font_size, font_color, x, y, is_centered):
         font = pygame.font.Font("../fonts/minecraft.ttf", font_size)
@@ -445,6 +461,9 @@ class Main():
                 # Reduce score & life
                 self.player1.score -= 5
                 self.player1.reduce_life()
+
+                # Change the hearts
+                self.change_hearts(self.player1)
         else:
             # Any asteroids hit?
             for collec in self.asteroid_list:
@@ -469,6 +488,9 @@ class Main():
                 # Reduce score & life
                 self.player2.score -= 5
                 self.player2.reduce_life()
+
+                # Change the hearts
+                self.change_hearts(self.player2)
         else:
             # Any asteroids hit?
             for collec in self.asteroid_list:
@@ -561,7 +583,8 @@ class Player(pygame.sprite.Sprite):
         if self.x_velocity > x_max_velocity:
             self.x_velocity = x_max_velocity
 
-        # TODO: Should I do this for y-direction as well?
+        # Instead of letting velocity go negative
+        # in the x-direction, force it to be zero
         if self.x_velocity < 0.000:
             self.x_velocity = 0.000
             if ("LEFT" in key_held and self.player_num == 2) or ("A" in key_held and self.player_num == 1):
@@ -569,16 +592,21 @@ class Player(pygame.sprite.Sprite):
             elif ("RIGHT" in key_held and self.player_num == 2) or ("D" in key_held and self.player_num == 1):
                 self.x_orientation = 1
 
-                # Instead of letting acceleration go negative
-                # in the y-direction, force it to be zero
-                # if self.y_velocity < 0.000:
-                # self.y_velocity = 0.000
+        # TODO: Should I do this for y-direction as well?
+        # Instead of letting velocity go negative
+        # in the y-direction, force it to be zero
+        if self.y_velocity < 0.000:
+            self.y_velocity = 0.000
+            if ("UP" in key_held and self.player_num == 2) or ("W" in key_held and self.player_num == 1):
+                self.y_orientation = -1
+            elif ("DOWN" in key_held and self.player_num == 2) or ("S" in key_held and self.player_num == 1):
+                self.y_orientation = 1
 
     def update(self):
 
         self.deal_with_event()
 
-        # Move in x direction
+        # ------------- Move in x-direction ------------- #
         self.rect.x += round(self.x_velocity * self.x_orientation)
 
         # Did we collide against a wall after moving in the x-direction?
@@ -588,14 +616,26 @@ class Player(pygame.sprite.Sprite):
                 self.rect.x += round(self.x_velocity * self.x_orientation)
                 break
 
+        # Did we collide against the other player after moving in the x-direction?
+        if self.rect.colliderect(self.other_player):
+            self.x_orientation *= -1
+            self.rect.x += round(self.x_velocity * self.x_orientation)
+
+        # ------------- Move in y-direction ------------- #
         self.rect.y += round(self.y_velocity * self.y_orientation)
 
-        # Did we collide against a wall after moving in the x-direction?
+        # Did we collide against a wall after moving in the y-direction?
         for wall in self.wall_list:
             if self.rect.colliderect(wall):
                 self.y_orientation *= -1
                 self.rect.y += round(self.y_velocity * self.y_orientation)
                 break
+
+        # Did we collide against the other player after moving in the y-direction?
+        if self.rect.colliderect(self.other_player):
+            self.y_orientation *= -1
+            self.rect.y += round(self.y_velocity * self.y_orientation)
+
 
 
 class Wall(pygame.sprite.Sprite):
@@ -694,7 +734,7 @@ class Explosion():
             self.surface.blit(self.image, [self.x, self.y], (
                 (self.explosion_frame % self.num_of_frames) * self.width / self.num_of_frames, 0,
                 self.width / self.num_of_frames, 45))
-            if self.wait % 10 == 0:
+            if self.wait % 5 == 0:
                 self.explosion_frame += 1
             self.wait += 1
 
@@ -708,7 +748,7 @@ class Heart(pygame.sprite.Sprite):
 
         self.heart_size = heart_size
 
-        self.make_full_heart()
+        self.make_heart_full()
 
         # Set background color to be transparent
         self.image.set_colorkey(background_color)
@@ -719,12 +759,12 @@ class Heart(pygame.sprite.Sprite):
         self.rect.x = x
         self.rect.y = y
 
-    def make_full_heart(self):
+    def make_heart_full(self):
         # Load the image
         self.image = pygame.image.load("../images/heart_full.png").convert_alpha()
         self.image = pygame.transform.scale(self.image, (self.heart_size, self.heart_size))
 
-    def make_empty_heart(self):
+    def make_heart_empty(self):
         # Load the image
         self.image = pygame.image.load("../images/heart_empty.png").convert_alpha()
         self.image = pygame.transform.scale(self.image, (self.heart_size, self.heart_size))
