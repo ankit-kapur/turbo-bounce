@@ -42,8 +42,8 @@ x_max_velocity = 5.0
 y_max_velocity = 7.0
 
 # Rate by which a key press moves a player
-x_acc_booster = 0.042
-y_acc_booster = 0.038
+x_acc_booster = 0.082
+y_acc_booster = 0.078
 
 # Background color
 background_color = pygame.Color('black')
@@ -54,6 +54,9 @@ gap_between_interactables = 40
 key_held = None
 interactables = []
 
+# TODO: make a Game class
+# TODO: detect the end of game - 2 scenarios
+# TODO: make new game button
 
 class Main():
     def __init__(self):
@@ -466,10 +469,7 @@ class Main():
                 self.change_hearts(self.player1)
         else:
             # Any asteroids hit?
-            for collec in self.asteroid_list:
-                if Utils.do_rects_intersect(self.player1.rect.x, self.player1.rect.y, self.player1.rect.h,
-                                            self.player1.rect.w, collec.rect.x, collec.rect.y, collec.rect.h,
-                                            collec.rect.w):
+            if pygame.sprite.spritecollide(self.player1, self.asteroid_list, False, pygame.sprite.collide_circle):
                     self.explosion_player1 = Explosion(self.player1.rect.x, self.player1.rect.y, self.surface)
                     self.all_sprite_list.remove(self.player1)
 
@@ -493,10 +493,7 @@ class Main():
                 self.change_hearts(self.player2)
         else:
             # Any asteroids hit?
-            for collec in self.asteroid_list:
-                if Utils.do_rects_intersect(self.player2.rect.x, self.player2.rect.y, self.player2.rect.h,
-                                            self.player2.rect.w, collec.rect.x, collec.rect.y, collec.rect.h,
-                                            collec.rect.w):
+            if pygame.sprite.spritecollide(self.player2, self.asteroid_list, False, pygame.sprite.collide_circle):
                     self.explosion_player2 = Explosion(self.player2.rect.x, self.player2.rect.y, self.surface)
                     self.all_sprite_list.remove(self.player2)
 
