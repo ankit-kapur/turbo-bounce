@@ -49,7 +49,7 @@ y_acc_booster = 0.078
 background_color = pygame.Color('black')
 
 # Spacing in between walls, cookies and asteroids
-gap_between_interactables = 50
+gap_between_interactables = 40
 
 key_held = []
 interactables = []
