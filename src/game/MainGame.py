@@ -11,7 +11,7 @@ from Interactable import Interactable
 
 # No. of walls, coins, and asteroids
 num_of_walls = 7
-num_of_cookies = 3
+num_of_cookies = 10
 num_of_asteroids = 6
 
 # Range of wall lengths
@@ -686,16 +686,17 @@ class Game():
         global victories_player2
 
         # Who won?
-        if not self.checked_winner and ((self.player1.score > self.player2.score) or self.player2.lives <= 0):
-            self.checked_winner = True
-            victories_player1 += 1
-            self.player1_endgame_text = "PLAYER 1  WINS"
-            self.player2_endgame_text = "PLAYER 2  LOSES"
-        elif not self.checked_winner and ((self.player1.score < self.player2.score) or self.player1.lives <= 0):
-            self.checked_winner = True
-            victories_player2 += 1
-            self.player1_endgame_text = "PLAYER 1  LOSES"
-            self.player2_endgame_text = "PLAYER 2  WINS"
+        if not self.checked_winner:
+            if (self.player1.score > self.player2.score) and self.player2.lives > 0:
+                self.checked_winner = True
+                victories_player1 += 1
+                self.player1_endgame_text = "PLAYER 1  WINS"
+                self.player2_endgame_text = "PLAYER 2  LOSES"
+            else:
+                self.checked_winner = True
+                victories_player2 += 1
+                self.player1_endgame_text = "PLAYER 1  LOSES"
+                self.player2_endgame_text = "PLAYER 2  WINS"
 
         # Make a veil
         veil_x = boundary_wall_padding + wall_thickness / 2
@@ -750,7 +751,7 @@ class Game():
 
         image = pygame.transform.scale(image, (int(width), int(height)))
 
-        self.img_surface.set_alpha(180)
+        self.img_surface.set_alpha(150)
 
         self.img_surface.blit(image, [0, 0])
 
@@ -855,7 +856,6 @@ class Player(pygame.sprite.Sprite):
             elif ("RIGHT" in key_held and self.player_num == 2) or ("D" in key_held and self.player_num == 1):
                 self.x_orientation = 1
 
-        # TODO: Should I do this for y-direction as well?
         # Instead of letting velocity go negative
         # in the y-direction, force it to be zero
         if self.y_velocity < 0.000:
