@@ -9,7 +9,7 @@ from Interactable import Interactable
 
 # No. of walls, coins, and asteroids
 num_of_walls = 7
-num_of_cookies = 10
+num_of_cookies = 2
 num_of_asteroids = 5
 
 # Range of wall lengths
@@ -22,6 +22,7 @@ play_area_size = 500
 
 # Boundary wall padding
 boundary_wall_padding = 20
+wall_thickness = 20
 
 # Window dimensions
 window_width = 1000
@@ -67,6 +68,7 @@ mousepressed = False
 victories_player1 = 0
 victories_player2 = 0
 
+
 class Main():
     def __init__(self):
         global game_over
@@ -95,21 +97,20 @@ class Main():
             mouse_x = mouse_pos[0]
             mouse_y = mouse_pos[1]
 
-            # Check if the game's over
-            if game_over:
-                game_over = False
-                new_game = True
-
+            # If it's time for a new game, make a new game
             if new_game:
                 new_game = False
+                game_over = False
                 game = Game(self.surface)
+
+            # Check if the game's over
+            if not game_over:
+                # Update all the sprites
+                game.all_sprite_list.update()
 
             game.surface.fill(background_color)
             # background_image = pygame.image.load("../images/background1.png").convert()
             # self.surface.blit(background_image, [0, 0])
-
-            # Update all the sprites
-            game.all_sprite_list.update()
 
             # Check for collisions
             game.check_for_collisions()
@@ -119,6 +120,9 @@ class Main():
 
             # Show text banners
             game.show_text_banners()
+
+            if game_over:
+                game.make_gameover_surface()
 
             # FPS
             clock.tick(60)
@@ -382,7 +386,7 @@ class Game():
         self.all_sprite_list.add(self.player1.heart3)
 
         # --- Hearts for player 2
-        heart_x = (window_width-165) + 60 - 15
+        heart_x = (window_width - 165) + 60 - 15
         self.player2.heart1 = Heart(heart_x, heart_y, heart_size)
         self.player2.heart2 = Heart(heart_x + gap, heart_y, heart_size)
         self.player2.heart3 = Heart(heart_x + (gap * 2), heart_y, heart_size)
@@ -392,7 +396,8 @@ class Game():
 
     def show_text_banners(self):
         # New game button
-        self.make_newgame_button("N E W   G A M E", 16, None, 108)
+        if not game_over:
+            self.make_newgame_button("N E W   G A M E", 16, None, 108)
 
         # Title
         self.show_title_text("TURBO BOUNCE", 28, pygame.Color('dodgerblue2'), None, 10, True)
@@ -401,29 +406,38 @@ class Game():
         # Instructions
         instruc_y = window_height - 27
         self.show_text("Player 1 - Use WASD to move.", 14, pygame.Color(player1_color), 12, instruc_y, False)
-        self.show_text("Player 2 - Use arrow keys to move", 14, pygame.Color(player2_color), window_width-315, instruc_y, False)
+        self.show_text("Player 2 - Use arrow keys to move", 14, pygame.Color(player2_color), window_width - 315,
+                       instruc_y, False)
 
-        score_x_offset = 8
+        score_x_offset = 8 - 32
         score_y_location = 30
         # Player 1 information
         score_x_location = 65
         self.show_text("PLAYER 1", 18, pygame.Color(player1_main_color), score_x_location, score_y_location, False)
         self.show_text("Lives: ", 16, pygame.Color(player1_color), score_x_location - 15, score_y_location + 28,
                        False)
-        self.show_text("Victories: %d" % self.player1.score, 16, pygame.Color(player1_color),
-                       score_x_location + score_x_offset-13, score_y_location + 28 + 28, False)
-        self.show_text("Round score: %d" % self.player1.score, 16, pygame.Color(player1_color),
-                       score_x_location + score_x_offset-30, score_y_location + 28 + 28 + 28, False)
+        self.show_text("Victories: %d" % victories_player1, 16, pygame.Color(player1_color),
+                       score_x_location + score_x_offset + 20, score_y_location + 28 + 28, False)
+
+        x_loc = score_x_location + score_x_offset - 2
+        if self.player1.score < 10:
+            x_loc += 8
+        self.show_text("Round score: %d" % self.player1.score, 16, pygame.Color('white'),
+                       x_loc, score_y_location + 28 + 28 + 28, False)
 
         # Player 2 information
-        score_x_location = window_width-165
+        score_x_location = window_width - 165
         self.show_text("PLAYER 2", 18, pygame.Color(player2_main_color), score_x_location, score_y_location, False)
         self.show_text("Lives: ", 16, pygame.Color(player2_color), score_x_location - 15, score_y_location + 28,
                        False)
-        self.show_text("Victories: %d" % self.player2.score, 16, pygame.Color(player2_color),
-                       score_x_location + score_x_offset-13, score_y_location + 28 + 28, False)
-        self.show_text("Round score: %d" % self.player2.score, 16, pygame.Color(player2_color),
-                       score_x_location + score_x_offset-30, score_y_location + 28 + 28 + 28, False)
+        self.show_text("Victories: %d" % victories_player2, 16, pygame.Color(player2_color),
+                       score_x_location + score_x_offset + 20, score_y_location + 28 + 28, False)
+
+        x_loc = score_x_location + score_x_offset - 2
+        if self.player2.score < 10:
+            x_loc += 8
+        self.show_text("Round score: %d" % self.player2.score, 16, pygame.Color('white'),
+                       x_loc, score_y_location + 28 + 28 + 28, False)
 
         # Debugging information
         # info_xpos = 620
@@ -467,7 +481,8 @@ class Game():
         textpos = text_surf.get_rect()
         textpos.centerx = self.surface.get_rect().centerx
         textpos.y = y
-        surrounding_rect = (textpos.x - padding*2, textpos.y - padding, textpos.width + padding*3, textpos.height + padding)
+        surrounding_rect = (
+        textpos.x - padding * 2, textpos.y - padding, textpos.width + padding * 3, textpos.height + padding)
 
 
         # Is the mouse hovering over 'New game'
@@ -629,6 +644,34 @@ class Game():
 
         # Blit it
         self.surface.blit(image, [mouse_x, mouse_y])
+
+    def make_gameover_surface(self):
+
+        # Create a veil
+        veil_x = boundary_wall_padding + wall_thickness / 2
+        veil_y = distance_from_top + wall_thickness
+        veil_width = round(window_width - wall_thickness * 2 - boundary_wall_padding)
+        veil_height = round(window_height - distance_from_top - wall_thickness * 2 - boundary_wall_padding * 2 + 5)
+        veil = pygame.Surface((veil_width, veil_height))
+        veil.set_alpha(160)  # alpha level
+        veil.fill(pygame.Color('black'))  # this fills the entire surface
+        self.surface.blit(veil, (veil_x, veil_y))
+
+        # Show 'Game over' text
+        game_over_color = 'darkred'
+        instruc_color = 'gray'
+        game_over_position = veil_y + 60
+        self.show_title_text("GAME", 60, pygame.Color(game_over_color), None, game_over_position, True)
+        game_over_position += 80
+        self.show_title_text("OVER", 60, pygame.Color(game_over_color), None, game_over_position, True)
+
+        game_over_position += 110
+        self.show_text("Press the spacebar or click the button", 16, pygame.Color(instruc_color), None, game_over_position, True)
+        game_over_position += 30
+        self.show_text("below to continue to the next round", 16, pygame.Color(instruc_color), None, game_over_position, True)
+
+        # 'New game' button
+        self.make_newgame_button("N E W  G A M E", 20, None, game_over_position + 60)
 
 
 class Player(pygame.sprite.Sprite):
