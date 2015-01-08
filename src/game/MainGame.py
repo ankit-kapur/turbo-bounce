@@ -9,8 +9,8 @@ from Interactable import Interactable
 
 # No. of walls, coins, and asteroids
 num_of_walls = 7
-num_of_cookies = 2
-num_of_asteroids = 5
+num_of_cookies = 11
+num_of_asteroids = 6
 
 # Range of wall lengths
 min_wall_length = 50
@@ -102,11 +102,12 @@ class Main():
                 game_over = False
                 game = Game(self.surface)
 
-            # Check if the game's over
+            # If the game's over, stop updated all sprites
             if not game_over:
                 # Update all the sprites
                 game.all_sprite_list.update()
 
+            # Fill the background surface
             game.surface.fill(background_color)
             # background_image = pygame.image.load("../images/background1.png").convert()
             # self.surface.blit(background_image, [0, 0])
@@ -411,8 +412,8 @@ class Game():
             self.make_newgame_button("N E W   G A M E", 16, pygame.Color('gray55'), None, 108)
 
         # Title
-        self.show_title_text("TURBO BOUNCE", 28, pygame.Color('dodgerblue2'), None, 10, True, 2)
-        self.show_text("Created by Ankit Kapur", 14, pygame.Color('dodgerblue4'), None, 50, True)
+        self.show_title_text("TURBO BOUNCE", 28, pygame.Color('dodgerblue2'), None, 15, True, 2)
+        self.show_text("Created by Ankit Kapur", 14, pygame.Color('dodgerblue4'), None, 55, True)
 
         # Instructions
         instruc_y = window_height - 27
@@ -679,13 +680,13 @@ class Game():
         if not self.checked_winner and ((self.player1.score > self.player2.score) or self.player2.lives <= 0):
             self.checked_winner = True
             victories_player1 += 1
-            self.player1_text = "PLAYER 1  WINS"
-            self.player2_text = "PLAYER 2  LOSES"
+            self.player1_endgame_text = "PLAYER 1  WINS"
+            self.player2_endgame_text = "PLAYER 2  LOSES"
         elif not self.checked_winner and ((self.player1.score < self.player2.score) or self.player1.lives <= 0):
             self.checked_winner = True
             victories_player2 += 1
-            self.player1_text = "PLAYER 1  LOSES"
-            self.player2_text = "PLAYER 2  WINS"
+            self.player1_endgame_text = "PLAYER 1  LOSES"
+            self.player2_endgame_text = "PLAYER 2  WINS"
 
         # Make a veil
         veil_x = boundary_wall_padding + wall_thickness / 2
@@ -704,8 +705,8 @@ class Game():
         self.draw_player_image_on_gameover("doge_full.png", x_pos_player1, y_pos_player)
         self.draw_player_image_on_gameover("pusheen_full.png", x_pos_player2, y_pos_player)
         y_pos_player += 140
-        self.show_text(self.player1_text, 20, pygame.Color(player1_color), x_pos_player1 + 5, y_pos_player, False)
-        self.show_text(self.player2_text, 20, pygame.Color(player2_color), x_pos_player2 - 12, y_pos_player, False)
+        self.show_text(self.player1_endgame_text, 20, pygame.Color(player1_color), x_pos_player1 + 5, y_pos_player, False)
+        self.show_text(self.player2_endgame_text, 20, pygame.Color(player2_color), x_pos_player2 - 12, y_pos_player, False)
 
         # Show 'Game over' text
         game_over_color = 'darkred'
