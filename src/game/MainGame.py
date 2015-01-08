@@ -17,15 +17,15 @@ min_wall_length = 50
 max_wall_length = 100
 
 # Play area
-distance_from_top = 120
-play_area_size = 400
+distance_from_top = 160
+play_area_size = 500
 
 # Boundary wall padding
 boundary_wall_padding = 20
 
 # Window dimensions
-window_width = 800
-window_height = 600
+window_width = 1000
+window_height = 700
 
 # Player 1
 player1_main_color = 'gold'
@@ -42,8 +42,8 @@ x_max_velocity = 5.0
 y_max_velocity = 7.0
 
 # Rate by which a key press moves a player
-x_acc_booster = 0.082
-y_acc_booster = 0.078
+x_acc_booster = 0.182
+y_acc_booster = 0.178
 
 # Background color
 background_color = pygame.Color('black')
@@ -56,15 +56,23 @@ interactables = []
 
 # Is the game over?
 game_over = False
+new_game = False
 
-# TODO: make a Game class
-# TODO: detect the end of game - 2 scenarios
-# TODO: make new game button
+# Mouse coordinates
+mouse_x = 0
+mouse_y = 0
+mousepressed = False
 
+# No. of victories
+victories_player1 = 0
+victories_player2 = 0
 
 class Main():
     def __init__(self):
         global game_over
+        global new_game
+        global mouse_x
+        global mouse_y
 
         # Initialize pygame
         pygame.init()
@@ -82,8 +90,18 @@ class Main():
 
         while not game.quit_game:
 
+            # Store mouse-pointer position
+            mouse_pos = pygame.mouse.get_pos()
+            mouse_x = mouse_pos[0]
+            mouse_y = mouse_pos[1]
+
+            # Check if the game's over
             if game_over:
                 game_over = False
+                new_game = True
+
+            if new_game:
+                new_game = False
                 game = Game(self.surface)
 
             game.surface.fill(background_color)
@@ -176,9 +194,16 @@ class Game():
         self.make_hearts()
 
     def handle_events(self):
+        global mousepressed
+
         # ----------- Event handlers ------------- #
         events = pygame.event.get()
         for e in events:
+            if e.type is pygame.MOUSEBUTTONDOWN:
+                mousepressed = True
+            elif e.type is pygame.MOUSEBUTTONUP:
+                mousepressed = False
+
             if e.type is KEYUP:
                 if e.key == pygame.K_UP:
                     key_held.remove("UP")
@@ -343,12 +368,12 @@ class Game():
 
     def make_hearts(self):
         # Hearts/lives
-        heart_y = 15 + 28 + 28
+        heart_y = 30 + 28
         gap = 25
         heart_size = 20
 
         # --- Hearts for player 1
-        heart_x = 50 + 60 - 15
+        heart_x = 65 + 60 - 15
         self.player1.heart1 = Heart(heart_x, heart_y, heart_size)
         self.player1.heart2 = Heart(heart_x + gap, heart_y, heart_size)
         self.player1.heart3 = Heart(heart_x + (gap * 2), heart_y, heart_size)
@@ -357,7 +382,7 @@ class Game():
         self.all_sprite_list.add(self.player1.heart3)
 
         # --- Hearts for player 2
-        heart_x = 660 + 60 - 15
+        heart_x = (window_width-165) + 60 - 15
         self.player2.heart1 = Heart(heart_x, heart_y, heart_size)
         self.player2.heart2 = Heart(heart_x + gap, heart_y, heart_size)
         self.player2.heart3 = Heart(heart_x + (gap * 2), heart_y, heart_size)
@@ -366,33 +391,39 @@ class Game():
         self.all_sprite_list.add(self.player2.heart3)
 
     def show_text_banners(self):
+        # New game button
+        self.make_newgame_button("N E W   G A M E", 16, None, 108)
+
         # Title
         self.show_title_text("TURBO BOUNCE", 28, pygame.Color('dodgerblue2'), None, 10, True)
         self.show_text("Created by Ankit Kapur", 14, pygame.Color('dodgerblue4'), None, 50, True)
 
         # Instructions
         instruc_y = window_height - 27
-        self.show_text("Player 1 - Use WASD to move.", 14, pygame.Color(player1_color), 10, instruc_y, False)
-        self.show_text("Player 2 - Use arrow keys to move", 14, pygame.Color(player2_color), 480, instruc_y, False)
+        self.show_text("Player 1 - Use WASD to move.", 14, pygame.Color(player1_color), 12, instruc_y, False)
+        self.show_text("Player 2 - Use arrow keys to move", 14, pygame.Color(player2_color), window_width-315, instruc_y, False)
 
-        # Player 1 information
         score_x_offset = 8
-        score_x_location = 50
-        score_y_location = 15
+        score_y_location = 30
+        # Player 1 information
+        score_x_location = 65
         self.show_text("PLAYER 1", 18, pygame.Color(player1_main_color), score_x_location, score_y_location, False)
-        self.show_text("Score: %d" % self.player1.score, 16, pygame.Color(player1_color),
-                       score_x_location + score_x_offset, score_y_location + 28, False)
-        self.show_text("Lives: ", 16, pygame.Color(player1_color), score_x_location - 15, score_y_location + 28 + 28,
+        self.show_text("Lives: ", 16, pygame.Color(player1_color), score_x_location - 15, score_y_location + 28,
                        False)
+        self.show_text("Victories: %d" % self.player1.score, 16, pygame.Color(player1_color),
+                       score_x_location + score_x_offset-13, score_y_location + 28 + 28, False)
+        self.show_text("Round score: %d" % self.player1.score, 16, pygame.Color(player1_color),
+                       score_x_location + score_x_offset-30, score_y_location + 28 + 28 + 28, False)
 
-        # Player 2 informationpy
-        score_x_location = 660
-        score_y_location = 15
+        # Player 2 information
+        score_x_location = window_width-165
         self.show_text("PLAYER 2", 18, pygame.Color(player2_main_color), score_x_location, score_y_location, False)
-        self.show_text("Score: %d" % self.player2.score, 16, pygame.Color(player2_color),
-                       score_x_location + score_x_offset, score_y_location + 28, False)
-        self.show_text("Lives: ", 16, pygame.Color(player2_color), score_x_location - 15, score_y_location + 28 + 28,
+        self.show_text("Lives: ", 16, pygame.Color(player2_color), score_x_location - 15, score_y_location + 28,
                        False)
+        self.show_text("Victories: %d" % self.player2.score, 16, pygame.Color(player2_color),
+                       score_x_location + score_x_offset-13, score_y_location + 28 + 28, False)
+        self.show_text("Round score: %d" % self.player2.score, 16, pygame.Color(player2_color),
+                       score_x_location + score_x_offset-30, score_y_location + 28 + 28 + 28, False)
 
         # Debugging information
         # info_xpos = 620
@@ -419,6 +450,49 @@ class Game():
         if player.lives >= 3:
             player.heart3.make_heart_full()
 
+    def make_newgame_button(self, text, font_size, x, y):
+
+        global new_game
+        global mousepressed
+
+        font = pygame.font.Font("../fonts/minecraft.ttf", font_size)
+
+        font_color = pygame.Color('gray55')
+        rect_color = pygame.Color('gray20')
+        hover_color = pygame.Color('gold1')
+
+        text_surf = font.render(text, 1, font_color)
+        padding = 5
+
+        textpos = text_surf.get_rect()
+        textpos.centerx = self.surface.get_rect().centerx
+        textpos.y = y
+        surrounding_rect = (textpos.x - padding*2, textpos.y - padding, textpos.width + padding*3, textpos.height + padding)
+
+
+        # Is the mouse hovering over 'New game'
+        if Utils.is_point_inside_rect(mouse_x, mouse_y, surrounding_rect):
+            if mousepressed:
+                new_game = True
+                mousepressed = False
+
+            text_surf = font.render(text, 1, hover_color)
+            # Blit the text
+            self.surface.blit(text_surf, textpos)
+            # Blit a rectangle
+            pygame.draw.rect(self.surface, hover_color, surrounding_rect, 2)
+
+            # Make the default cursor invisible, and draw our cursor
+            pygame.mouse.set_visible(False)
+            self.draw_mouse_cursor()
+        else:
+            pygame.mouse.set_visible(True)
+            # Blit the text
+            self.surface.blit(text_surf, textpos)
+            # Blit a rectangle
+            pygame.draw.rect(self.surface, rect_color, surrounding_rect, 2)
+
+
     def show_title_text(self, text, font_size, font_color, x, y, is_centered):
         font = pygame.font.Font("../fonts/minecraft.ttf", font_size)
 
@@ -436,6 +510,7 @@ class Game():
         # Blit it
         self.surface.blit(text_surf, textpos)
 
+
     def show_text(self, text, font_size, font_color, x, y, is_centered):
         font = pygame.font.Font("../fonts/minecraft.ttf", font_size)
 
@@ -452,8 +527,8 @@ class Game():
         # Blit it
         self.surface.blit(text_surf, textpos)
 
-    def check_for_collisions(self):
 
+    def check_for_collisions(self):
         global game_over
         got_cookie = False
 
@@ -534,6 +609,26 @@ class Game():
             if pygame.sprite.spritecollide(self.player2, self.asteroid_list, False, pygame.sprite.collide_circle):
                 self.explosion_player2 = Explosion(self.player2.rect.x, self.player2.rect.y, self.surface)
                 self.all_sprite_list.remove(self.player2)
+
+
+    def draw_mouse_cursor(self):
+        global mouse_x
+        global mouse_y
+
+        # Load the image
+        image = pygame.image.load("../images/mouse.png").convert_alpha()
+
+        # Re-scaled image
+        height = 45
+        width = image.get_rect().w / (image.get_rect().h / 45)
+
+        image = pygame.transform.scale(image, (width, height))
+
+        # Set background color to be transparent
+        image.set_colorkey(background_color)
+
+        # Blit it
+        self.surface.blit(image, [mouse_x, mouse_y])
 
 
 class Player(pygame.sprite.Sprite):
@@ -655,6 +750,16 @@ class Player(pygame.sprite.Sprite):
 
         # Did we collide against the other player after moving in the x-direction?
         if self.rect.colliderect(self.other_player):
+
+            # The other guy is STATIONARY
+            if round(self.other_player.x_velocity) <= 0.000:
+                self.other_player.x_orientation = self.x_orientation
+                self.other_player.x_velocity += self.x_velocity
+            # The other guy was moving in the same direction too
+            elif self.other_player.x_orientation == self.x_orientation:
+                self.other_player.x_velocity += self.x_velocity
+
+            # Now we change our orientation and update
             self.x_orientation *= -1
             self.rect.x += round(self.x_velocity * self.x_orientation)
 
@@ -670,6 +775,16 @@ class Player(pygame.sprite.Sprite):
 
         # Did we collide against the other player after moving in the y-direction?
         if self.rect.colliderect(self.other_player):
+
+            # The other guy is STATIONARY
+            if round(self.other_player.y_velocity) <= 0.000:
+                self.other_player.y_orientation = self.y_orientation
+                self.other_player.y_velocity += self.y_velocity
+            # The other guy was moving in the same direction too
+            elif self.other_player.y_orientation == self.y_orientation:
+                self.other_player.y_velocity += self.y_velocity
+
+            # Now we change our orientation and update
             self.y_orientation *= -1
             self.rect.y += round(self.y_velocity * self.y_orientation)
 
@@ -804,10 +919,6 @@ class Heart(pygame.sprite.Sprite):
         # Load the image
         self.image = pygame.image.load("../images/heart_empty.png").convert_alpha()
         self.image = pygame.transform.scale(self.image, (self.heart_size, self.heart_size))
-
-
-# class New_game_button:
-# def __init__(self, text):
 
 
 Main()

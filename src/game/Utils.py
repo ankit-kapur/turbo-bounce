@@ -32,7 +32,13 @@ def get_wall_direction(x1, y1, h1, w1, x2_wall, y2_wall, h2_wall, w2_wall):
 
 
 def is_point_inside_rect(x, y, rect):
-    if (x > rect.left) and (x < rect.right) and (y > rect.top) and (y < rect.bottom):
+
+    left = rect[0]
+    right = rect[0] + rect[2]
+    top = rect[1]
+    bottom = rect[1] + rect[3]
+
+    if (x > left) and (x < right) and (y > top) and (y < bottom):
         return True
     else:
         return False
