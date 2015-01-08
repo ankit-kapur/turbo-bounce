@@ -68,7 +68,6 @@ mousepressed = False
 victories_player1 = 0
 victories_player2 = 0
 
-
 class Main():
     def __init__(self):
         global game_over
@@ -142,6 +141,13 @@ class Game():
         global num_of_cookies
 
         self.surface = surface
+
+        # Checked winner?
+        self.checked_winner = False
+
+        # Player endgame texts
+        self.player1_endgame_text = None
+        self.player2_endgame_text = None
 
         # Keeps track of explosion animations
         self.explosion_player1 = None
@@ -229,6 +235,11 @@ class Game():
             if e.type is KEYDOWN:
                 if e.key == pygame.K_ESCAPE:
                     quit_game = True
+                if e.key == pygame.K_SPACE:
+                    if game_over:
+                        global new_game
+                        new_game = True
+
                 if e.key == pygame.K_UP:
                     key_held.append("UP")
                 if e.key == pygame.K_DOWN:
@@ -397,10 +408,10 @@ class Game():
     def show_text_banners(self):
         # New game button
         if not game_over:
-            self.make_newgame_button("N E W   G A M E", 16, None, 108)
+            self.make_newgame_button("N E W   G A M E", 16, pygame.Color('gray55'), None, 108)
 
         # Title
-        self.show_title_text("TURBO BOUNCE", 28, pygame.Color('dodgerblue2'), None, 10, True)
+        self.show_title_text("TURBO BOUNCE", 28, pygame.Color('dodgerblue2'), None, 10, True, 2)
         self.show_text("Created by Ankit Kapur", 14, pygame.Color('dodgerblue4'), None, 50, True)
 
         # Instructions
@@ -464,14 +475,13 @@ class Game():
         if player.lives >= 3:
             player.heart3.make_heart_full()
 
-    def make_newgame_button(self, text, font_size, x, y):
+    def make_newgame_button(self, text, font_size, font_color, x, y):
 
         global new_game
         global mousepressed
 
         font = pygame.font.Font("../fonts/minecraft.ttf", font_size)
 
-        font_color = pygame.Color('gray55')
         rect_color = pygame.Color('gray20')
         hover_color = pygame.Color('gold1')
 
@@ -508,11 +518,11 @@ class Game():
             pygame.draw.rect(self.surface, rect_color, surrounding_rect, 2)
 
 
-    def show_title_text(self, text, font_size, font_color, x, y, is_centered):
+    def show_title_text(self, text, font_size, font_color, x, y, is_centered, bevel):
         font = pygame.font.Font("../fonts/minecraft.ttf", font_size)
 
         # Render text
-        text_surf = Crystal_title.textCrystal(font, text, 2, font_color, 170)
+        text_surf = Crystal_title.textCrystal(font, text, bevel, font_color, 170)
         # text_surf = font.render(text, 1, font_color)
 
         if is_centered:
@@ -645,9 +655,39 @@ class Game():
         # Blit it
         self.surface.blit(image, [mouse_x, mouse_y])
 
-    def make_gameover_surface(self):
+    def draw_player_image_on_gameover(self, filename, x, y):
+        # Load the image
+        image = pygame.image.load("../images/%s" % filename).convert_alpha()
 
-        # Create a veil
+        # Re-scaled image
+        height = 120.0
+        width = image.get_rect().w * height / image.get_rect().h
+
+        image = pygame.transform.scale(image, (int(width), int(height)))
+
+        # Set background color to be transparent
+        image.set_colorkey(background_color)
+
+        # Blit it
+        self.surface.blit(image, [x, y])
+
+    def make_gameover_surface(self):
+        global victories_player1
+        global victories_player2
+
+        # Who won?
+        if not self.checked_winner and ((self.player1.score > self.player2.score) or self.player2.lives <= 0):
+            self.checked_winner = True
+            victories_player1 += 1
+            self.player1_text = "PLAYER 1  WINS"
+            self.player2_text = "PLAYER 2  LOSES"
+        elif not self.checked_winner and ((self.player1.score < self.player2.score) or self.player1.lives <= 0):
+            self.checked_winner = True
+            victories_player2 += 1
+            self.player1_text = "PLAYER 1  LOSES"
+            self.player2_text = "PLAYER 2  WINS"
+
+        # Make a veil
         veil_x = boundary_wall_padding + wall_thickness / 2
         veil_y = distance_from_top + wall_thickness
         veil_width = round(window_width - wall_thickness * 2 - boundary_wall_padding)
@@ -657,21 +697,34 @@ class Game():
         veil.fill(pygame.Color('black'))  # this fills the entire surface
         self.surface.blit(veil, (veil_x, veil_y))
 
+        # ----- Player information ----- #
+        y_pos_player = veil_y + 60
+        x_pos_player1 = 80
+        x_pos_player2 = window_width - 250
+        self.draw_player_image_on_gameover("doge_full.png", x_pos_player1, y_pos_player)
+        self.draw_player_image_on_gameover("pusheen_full.png", x_pos_player2, y_pos_player)
+        y_pos_player += 140
+        self.show_text(self.player1_text, 20, pygame.Color(player1_color), x_pos_player1 + 5, y_pos_player, False)
+        self.show_text(self.player2_text, 20, pygame.Color(player2_color), x_pos_player2 - 12, y_pos_player, False)
+
         # Show 'Game over' text
         game_over_color = 'darkred'
         instruc_color = 'gray'
         game_over_position = veil_y + 60
-        self.show_title_text("GAME", 60, pygame.Color(game_over_color), None, game_over_position, True)
+        self.show_title_text("GAME", 60, pygame.Color(game_over_color), None, game_over_position, True, 3)
         game_over_position += 80
-        self.show_title_text("OVER", 60, pygame.Color(game_over_color), None, game_over_position, True)
+        self.show_title_text("OVER", 60, pygame.Color(game_over_color), None, game_over_position, True, 3)
 
+        # Instructions
         game_over_position += 110
-        self.show_text("Press the spacebar or click the button", 16, pygame.Color(instruc_color), None, game_over_position, True)
+        self.show_text("Press the spacebar, or", 16, pygame.Color(instruc_color), None, game_over_position, True)
         game_over_position += 30
-        self.show_text("below to continue to the next round", 16, pygame.Color(instruc_color), None, game_over_position, True)
+        self.show_text("click the button below to", 16, pygame.Color(instruc_color), None, game_over_position, True)
+        game_over_position += 30
+        self.show_text("continue to the next round", 16, pygame.Color(instruc_color), None, game_over_position, True)
 
         # 'New game' button
-        self.make_newgame_button("N E W  G A M E", 20, None, game_over_position + 60)
+        self.make_newgame_button("N E W  G A M E", 20, pygame.Color('white'), None, game_over_position + 60)
 
 
 class Player(pygame.sprite.Sprite):
