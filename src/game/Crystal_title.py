@@ -19,7 +19,10 @@ def textCrystal(font, message, bevel=5, fontcolor=(64, 128, 255), contrast=70):
     """Renders text with a 'crystal' style apperance."""
     base = font.render(message, 0, fontcolor)
     size = base.get_width() + bevel * 2, base.get_height() + bevel * 2 + 2
-    img = pygame.Surface(size, 16)
+    img = pygame.Surface(size)
+
+    # Set background color to be transparent
+    img.set_colorkey(pygame.Color('black'))
 
     tl = (-1, -1)
     tc = (0, -1)

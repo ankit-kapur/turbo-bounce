@@ -11,7 +11,7 @@ from Interactable import Interactable
 
 # No. of walls, coins, and asteroids
 num_of_walls = 7
-num_of_cookies = 11
+num_of_cookies = 3
 num_of_asteroids = 6
 
 # Range of wall lengths
@@ -114,8 +114,9 @@ class Main():
 
             # Fill the background surface
             game.surface.fill(background_color)
-            # background_image = pygame.image.load("../images/background1.png").convert()
-            # self.surface.blit(background_image, [0, 0])
+
+            # Make background image
+            game.blit_background_img_surface()
 
             # Check for collisions
             game.check_for_collisions()
@@ -130,7 +131,7 @@ class Main():
                 game.make_gameover_surface()
 
             # FPS
-            clock.tick(60)
+            clock.tick(120)
 
             # Go ahead and update the screen with what we've drawn.
             pygame.display.flip()
@@ -162,7 +163,7 @@ class Game():
         # Initialize stuff
         interactables = []
         self.quit_game = False
-        self.cookies_left = num_of_cookies - 1
+        self.cookies_left = num_of_cookies
 
         # List to hold all the sprites
         self.all_sprite_list = pygame.sprite.Group()
@@ -175,6 +176,9 @@ class Game():
 
         # ----- Making the WALLS
         self.make_the_walls()
+
+        # Make background image
+        self.make_background_img_surface()
 
         # ---- Making the players
         # Initial velocities
@@ -273,7 +277,7 @@ class Game():
         global interactables
 
         # --- Random cookies
-        for i in range(1, num_of_cookies):
+        for i in range(0, num_of_cookies):
             # While the wall generated is valid (not overlapping with anything else)
             is_invalid_cookie = True
             while is_invalid_cookie:
@@ -731,6 +735,31 @@ class Game():
 
         # 'New game' button
         self.make_newgame_button("N E W  G A M E", 20, pygame.Color('white'), None, game_over_position + 60)
+
+    def make_background_img_surface(self):
+        img_width = round(window_width - wall_thickness * 2 - boundary_wall_padding)
+        img_height = round(window_height - distance_from_top - wall_thickness * 2 - boundary_wall_padding * 2 + 5)
+        self.img_surface = pygame.Surface((img_width, img_height))
+
+        # Load the image
+        image = pygame.image.load(os.path.join(os_path, "background_img.png")).convert_alpha()
+
+        # Re-scaled image
+        width = img_width
+        height = image.get_rect().h * width / image.get_rect().w
+
+        image = pygame.transform.scale(image, (int(width), int(height)))
+
+        self.img_surface.set_alpha(180)
+
+        self.img_surface.blit(image, [0, 0])
+
+    def blit_background_img_surface(self):
+        img_x = boundary_wall_padding + wall_thickness / 2
+        img_y = distance_from_top + wall_thickness
+
+        # Blit it
+        self.surface.blit(self.img_surface, [img_x, img_y])
 
 
 class Player(pygame.sprite.Sprite):
