@@ -1,3 +1,5 @@
+import os
+
 __author__ = 'ankitkap'
 
 import Crystal_title
@@ -28,15 +30,18 @@ wall_thickness = 20
 window_width = 1000
 window_height = 700
 
+# OS path for images
+os_path = "../images"
+
 # Player 1
 player1_main_color = 'gold'
 player1_color = 'gold4'
-player1_img = "../images/doge.png"
+player1_img = os.path.join(os_path, "doge.png")
 player1_img_dimensions = (60, 43)
 
 player2_main_color = 'gray62'
 player2_color = 'gray28'
-player2_img = "../images/pusheen.png"
+player2_img = os.path.join(os_path, "pusheen.png")
 player2_img_dimensions = (60, 36)
 
 x_max_velocity = 5.0
@@ -642,7 +647,7 @@ class Game():
         global mouse_y
 
         # Load the image
-        image = pygame.image.load("../images/mouse.png").convert_alpha()
+        image = pygame.image.load(os.path.join(os_path, "mouse.png")).convert_alpha()
 
         # Re-scaled image
         height = 45
@@ -658,7 +663,7 @@ class Game():
 
     def draw_player_image_on_gameover(self, filename, x, y):
         # Load the image
-        image = pygame.image.load("../images/%s" % filename).convert_alpha()
+        image = pygame.image.load(os.path.join(os_path, "%s" % filename)).convert_alpha()
 
         # Re-scaled image
         height = 120.0
@@ -892,7 +897,7 @@ class Wall(pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self)
 
         # Load the image
-        self.image = pygame.image.load("../images/wall1.png").convert()
+        self.image = pygame.image.load(os.path.join(os_path, "wall1.png")).convert()
 
         # Set background color to be transparent
         self.image.set_colorkey(background_color)
@@ -913,7 +918,7 @@ class Cookie(pygame.sprite.Sprite):
         cookie_number = random.randint(1, 7)
 
         # Load the image
-        self.image = pygame.image.load("../images/allcookies/cookie-%d.png" % cookie_number).convert_alpha()
+        self.image = pygame.image.load(os.path.join(os_path, "allcookies", "cookie-%d.png") % cookie_number).convert_alpha()
         self.image = pygame.transform.scale(self.image, (35, 29))
 
         # Set background color to be transparent
@@ -932,7 +937,7 @@ class Asteroid(pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self)
 
         # Load the image
-        self.image = pygame.image.load("../images/asteroid.png").convert_alpha()
+        self.image = pygame.image.load(os.path.join(os_path, "asteroid.png")).convert_alpha()
         self.image = pygame.transform.scale(self.image, (45, 45))
 
         # Set background color to be transparent
@@ -949,7 +954,7 @@ class Explosion():
     def __init__(self, x, y, surface):
 
         # Load the image
-        self.image = pygame.image.load("../images/explosion_spritesheet.png").convert_alpha()
+        self.image = pygame.image.load(os.path.join(os_path, "explosion_spritesheet.png")).convert_alpha()
 
         # Re-scaled image
         self.height = 45
@@ -1009,12 +1014,12 @@ class Heart(pygame.sprite.Sprite):
 
     def make_heart_full(self):
         # Load the image
-        self.image = pygame.image.load("../images/heart_full.png").convert_alpha()
+        self.image = pygame.image.load(os.path.join(os_path, "heart_full.png")).convert_alpha()
         self.image = pygame.transform.scale(self.image, (self.heart_size, self.heart_size))
 
     def make_heart_empty(self):
         # Load the image
-        self.image = pygame.image.load("../images/heart_empty.png").convert_alpha()
+        self.image = pygame.image.load(os.path.join(os_path, "heart_empty.png")).convert_alpha()
         self.image = pygame.transform.scale(self.image, (self.heart_size, self.heart_size))
 
 
