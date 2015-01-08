@@ -49,30 +49,86 @@ y_acc_booster = 0.078
 background_color = pygame.Color('black')
 
 # Spacing in between walls, cookies and asteroids
-gap_between_interactables = 40
+gap_between_interactables = 50
 
-key_held = None
+key_held = []
 interactables = []
+
+# Is the game over?
+game_over = False
 
 # TODO: make a Game class
 # TODO: detect the end of game - 2 scenarios
 # TODO: make new game button
 
+
 class Main():
     def __init__(self):
+        global game_over
+
+        # Initialize pygame
+        pygame.init()
+
+        # This clock will control the FPS
+        clock = pygame.time.Clock()
+
+        # Setup the game-screen
+        screensize = (window_width, window_height)
+        self.surface = pygame.display.set_mode(screensize)
+        pygame.display.set_caption("Turbo bounce")
+
+        # Make the game
+        game = Game(self.surface)
+
+        while not game.quit_game:
+
+            if game_over:
+                game_over = False
+                game = Game(self.surface)
+
+            game.surface.fill(background_color)
+            # background_image = pygame.image.load("../images/background1.png").convert()
+            # self.surface.blit(background_image, [0, 0])
+
+            # Update all the sprites
+            game.all_sprite_list.update()
+
+            # Check for collisions
+            game.check_for_collisions()
+
+            # Draw all the sprites
+            game.all_sprite_list.draw(game.surface)
+
+            # Show text banners
+            game.show_text_banners()
+
+            # FPS
+            clock.tick(60)
+
+            # Go ahead and update the screen with what we've drawn.
+            pygame.display.flip()
+
+            # Handle events
+            game.handle_events()
+
+
+class Game():
+    def __init__(self, surface):
+
+        global interactables
+        global key_held
+        global num_of_cookies
+
+        self.surface = surface
 
         # Keeps track of explosion animations
         self.explosion_player1 = None
         self.explosion_player2 = None
 
         # Initialize stuff
-        global interactables
         interactables = []
-
-        pygame.init()
-        global key_held
-
-        clock = pygame.time.Clock()
+        self.quit_game = False
+        self.cookies_left = num_of_cookies - 1
 
         # List to hold all the sprites
         self.all_sprite_list = pygame.sprite.Group()
@@ -82,10 +138,6 @@ class Main():
         self.cookie_list = pygame.sprite.Group()
         # Asteroids
         self.asteroid_list = pygame.sprite.Group()
-
-        screensize = (window_width, window_height)
-        self.surface = pygame.display.set_mode(screensize)
-        pygame.display.set_caption("Turbo bounce")
 
         # ----- Making the WALLS
         self.make_the_walls()
@@ -123,78 +175,53 @@ class Main():
         # ----- Hearts (representing player's lives
         self.make_hearts()
 
-        quit_game = False
-        key_held = []
-        while not quit_game:
+    def handle_events(self):
+        # ----------- Event handlers ------------- #
+        events = pygame.event.get()
+        for e in events:
+            if e.type is KEYUP:
+                if e.key == pygame.K_UP:
+                    key_held.remove("UP")
+                if e.key == pygame.K_DOWN:
+                    key_held.remove("DOWN")
+                if e.key == pygame.K_LEFT:
+                    key_held.remove("LEFT")
+                if e.key == pygame.K_RIGHT:
+                    key_held.remove("RIGHT")
 
-            self.surface.fill(background_color)
-            # background_image = pygame.image.load("../images/background1.png").convert()
-            # self.surface.blit(background_image, [0, 0])
-
-            self.all_sprite_list.update()
-
-            # Check for collisions
-            self.check_for_collisions()
-
-            self.all_sprite_list.draw(self.surface)
-
-            # Show static text banners
-            self.show_static_text_banners()
-
-            # ----- Dynamically changing text banners
-            self.show_dynamic_text_banners()
-
-            # FPS
-            clock.tick(60)
-
-            # Go ahead and update the screen with what we've drawn.
-            pygame.display.flip()
-
-            # ----------- Event handlers ------------- #
-            events = pygame.event.get()
-            for e in events:
-                if e.type is KEYUP:
-                    if e.key == pygame.K_UP:
-                        key_held.remove("UP")
-                    if e.key == pygame.K_DOWN:
-                        key_held.remove("DOWN")
-                    if e.key == pygame.K_LEFT:
-                        key_held.remove("LEFT")
-                    if e.key == pygame.K_RIGHT:
-                        key_held.remove("RIGHT")
-
-                    if e.key == pygame.K_w:
-                        key_held.remove("W")
-                    if e.key == pygame.K_a:
-                        key_held.remove("A")
-                    if e.key == pygame.K_s:
-                        key_held.remove("S")
-                    if e.key == pygame.K_d:
-                        key_held.remove("D")
-                if e.type is KEYDOWN:
-                    if e.key == pygame.K_ESCAPE:
-                        quit_game = True
-                    if e.key == pygame.K_UP:
-                        key_held.append("UP")
-                    if e.key == pygame.K_DOWN:
-                        key_held.append("DOWN")
-                    if e.key == pygame.K_LEFT:
-                        key_held.append("LEFT")
-                    if e.key == pygame.K_RIGHT:
-                        key_held.append("RIGHT")
-
-                    if e.key == pygame.K_w:
-                        key_held.append("W")
-                    if e.key == pygame.K_a:
-                        key_held.append("A")
-                    if e.key == pygame.K_s:
-                        key_held.append("S")
-                    if e.key == pygame.K_d:
-                        key_held.append("D")
-
-                if e.type is QUIT:
-                    # To quit when the close button is clicked
+                if e.key == pygame.K_w:
+                    key_held.remove("W")
+                if e.key == pygame.K_a:
+                    key_held.remove("A")
+                if e.key == pygame.K_s:
+                    key_held.remove("S")
+                if e.key == pygame.K_d:
+                    key_held.remove("D")
+            if e.type is KEYDOWN:
+                if e.key == pygame.K_ESCAPE:
                     quit_game = True
+                if e.key == pygame.K_UP:
+                    key_held.append("UP")
+                if e.key == pygame.K_DOWN:
+                    key_held.append("DOWN")
+                if e.key == pygame.K_LEFT:
+                    key_held.append("LEFT")
+                if e.key == pygame.K_RIGHT:
+                    key_held.append("RIGHT")
+
+                if e.key == pygame.K_w:
+                    key_held.append("W")
+                if e.key == pygame.K_a:
+                    key_held.append("A")
+                if e.key == pygame.K_s:
+                    key_held.append("S")
+                if e.key == pygame.K_d:
+                    key_held.append("D")
+
+            if e.type is QUIT:
+                # To quit when the close button is clicked
+                self.quit_game = True
+
 
     def make_the_cookies(self):
         global interactables
@@ -338,7 +365,7 @@ class Main():
         self.all_sprite_list.add(self.player2.heart2)
         self.all_sprite_list.add(self.player2.heart3)
 
-    def show_static_text_banners(self):
+    def show_text_banners(self):
         # Title
         self.show_title_text("TURBO BOUNCE", 28, pygame.Color('dodgerblue2'), None, 10, True)
         self.show_text("Created by Ankit Kapur", 14, pygame.Color('dodgerblue4'), None, 50, True)
@@ -348,7 +375,6 @@ class Main():
         self.show_text("Player 1 - Use WASD to move.", 14, pygame.Color(player1_color), 10, instruc_y, False)
         self.show_text("Player 2 - Use arrow keys to move", 14, pygame.Color(player2_color), 480, instruc_y, False)
 
-    def show_dynamic_text_banners(self):
         # Player 1 information
         score_x_offset = 8
         score_x_location = 50
@@ -428,6 +454,9 @@ class Main():
 
     def check_for_collisions(self):
 
+        global game_over
+        got_cookie = False
+
         # Any cookies collected?
         for collec in self.cookie_list:
             if Utils.do_rects_intersect(self.player1.rect.x, self.player1.rect.y, self.player1.rect.h,
@@ -438,6 +467,7 @@ class Main():
                 # Delete the cookie
                 self.cookie_list.remove(collec)
                 self.all_sprite_list.remove(collec)
+                got_cookie = True
 
             if Utils.do_rects_intersect(self.player2.rect.x, self.player2.rect.y, self.player2.rect.h,
                                         self.player2.rect.w, collec.rect.x, collec.rect.y, collec.rect.h,
@@ -447,6 +477,14 @@ class Main():
                 # Delete the cookie
                 self.cookie_list.remove(collec)
                 self.all_sprite_list.remove(collec)
+                got_cookie = True
+
+        # Reduce the number of cookies left, and check if the game's over
+        if got_cookie:
+            self.cookies_left -= 1
+
+            if self.cookies_left <= 0:
+                game_over = True
 
         # ------------ Asteroid collisions are handled here ------------- #
         # --- Player 1 --- #
@@ -470,8 +508,8 @@ class Main():
         else:
             # Any asteroids hit?
             if pygame.sprite.spritecollide(self.player1, self.asteroid_list, False, pygame.sprite.collide_circle):
-                    self.explosion_player1 = Explosion(self.player1.rect.x, self.player1.rect.y, self.surface)
-                    self.all_sprite_list.remove(self.player1)
+                self.explosion_player1 = Explosion(self.player1.rect.x, self.player1.rect.y, self.surface)
+                self.all_sprite_list.remove(self.player1)
 
         # --- Player 2 --- #
         # If there's any explosions happening, make the next explosion frame
@@ -494,8 +532,8 @@ class Main():
         else:
             # Any asteroids hit?
             if pygame.sprite.spritecollide(self.player2, self.asteroid_list, False, pygame.sprite.collide_circle):
-                    self.explosion_player2 = Explosion(self.player2.rect.x, self.player2.rect.y, self.surface)
-                    self.all_sprite_list.remove(self.player2)
+                self.explosion_player2 = Explosion(self.player2.rect.x, self.player2.rect.y, self.surface)
+                self.all_sprite_list.remove(self.player2)
 
 
 class Player(pygame.sprite.Sprite):
@@ -535,10 +573,12 @@ class Player(pygame.sprite.Sprite):
 
     def reduce_life(self):
         self.lives -= 1
+        global game_over
 
         # TODO: Handle this game-over scenario
         if self.lives <= 0:
             print "Game over for player %d" % self.player_num
+            game_over = True
 
     def reset_player_on_screen(self):
 
@@ -632,7 +672,6 @@ class Player(pygame.sprite.Sprite):
         if self.rect.colliderect(self.other_player):
             self.y_orientation *= -1
             self.rect.y += round(self.y_velocity * self.y_orientation)
-
 
 
 class Wall(pygame.sprite.Sprite):
