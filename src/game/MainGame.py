@@ -73,6 +73,7 @@ mousepressed = False
 victories_player1 = 0
 victories_player2 = 0
 
+
 class Main():
     def __init__(self):
         global game_over
@@ -502,7 +503,7 @@ class Game():
         textpos.centerx = self.surface.get_rect().centerx
         textpos.y = y
         surrounding_rect = (
-        textpos.x - padding * 2, textpos.y - padding, textpos.width + padding * 3, textpos.height + padding)
+            textpos.x - padding * 2, textpos.y - padding, textpos.width + padding * 3, textpos.height + padding)
 
 
         # Is the mouse hovering over 'New game'
@@ -685,18 +686,37 @@ class Game():
         global victories_player1
         global victories_player2
 
-        # Who won?
         if not self.checked_winner:
-            if (self.player1.score > self.player2.score) and self.player2.lives > 0:
+
+            # Who won?
+            winner = 3
+            if self.player1.lives <= 0:
+                winner = 2
+            elif self.player2.lives <= 0:
+                winner = 1
+            else:
+                if self.player1.score > self.player2.score:
+                    winner = 1
+                if self.player1.score < self.player2.score:
+                    winner = 2
+                elif self.player1.score == self.player2.score:
+                    winner = 3
+
+            # Show who won
+            if winner is 1:
                 self.checked_winner = True
                 victories_player1 += 1
                 self.player1_endgame_text = "PLAYER 1  WINS"
                 self.player2_endgame_text = "PLAYER 2  LOSES"
-            else:
+            elif winner is 2:
                 self.checked_winner = True
                 victories_player2 += 1
                 self.player1_endgame_text = "PLAYER 1  LOSES"
                 self.player2_endgame_text = "PLAYER 2  WINS"
+            else:
+                self.checked_winner = True
+                self.player1_endgame_text = "PLAYERS ARE TIED"
+                self.player2_endgame_text = "PLAYERS ARE TIED"
 
         # Make a veil
         veil_x = boundary_wall_padding + wall_thickness / 2
@@ -715,8 +735,10 @@ class Game():
         self.draw_player_image_on_gameover("doge_full.png", x_pos_player1, y_pos_player)
         self.draw_player_image_on_gameover("pusheen_full.png", x_pos_player2, y_pos_player)
         y_pos_player += 140
-        self.show_text(self.player1_endgame_text, 20, pygame.Color(player1_color), x_pos_player1 + 5, y_pos_player, False)
-        self.show_text(self.player2_endgame_text, 20, pygame.Color(player2_color), x_pos_player2 - 12, y_pos_player, False)
+        self.show_text(self.player1_endgame_text, 20, pygame.Color(player1_color), x_pos_player1 + 5, y_pos_player,
+                       False)
+        self.show_text(self.player2_endgame_text, 20, pygame.Color(player2_color), x_pos_player2 - 12, y_pos_player,
+                       False)
 
         # Show 'Game over' text
         game_over_color = 'darkred'
@@ -947,7 +969,8 @@ class Cookie(pygame.sprite.Sprite):
         cookie_number = random.randint(1, 7)
 
         # Load the image
-        self.image = pygame.image.load(os.path.join(os_path, "allcookies", "cookie-%d.png") % cookie_number).convert_alpha()
+        self.image = pygame.image.load(
+            os.path.join(os_path, "allcookies", "cookie-%d.png") % cookie_number).convert_alpha()
         self.image = pygame.transform.scale(self.image, (35, 29))
 
         # Set background color to be transparent
